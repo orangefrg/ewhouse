@@ -1,4 +1,5 @@
 from django.db import models
+import uuid
 
 USER_ROLES = (
     ("ADMIN", "Administrator"),
@@ -12,30 +13,52 @@ SUPPLIER_TYPES = (
     ("OTHER", "Other")
 )
 
+TRANSACTION_TYPES = (
+    ("BUY", "Buy"),
+    ("SELL", "Sell"),
+    ("USE", "Use"),
+    ("LOSE", "Lose"),
+    ("DISCOVER", "Discover"),
+    ("OTHER", "Other")
+)
+
+class User(models.Model):
+    name = models.TextField()
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    role = models.CharField(max_length=10, choices=USER_ROLES)
+    is_active = models.BooleanField(default=False)
+
+class ComponentMacroType(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    description = models.TextField(blank=True)
+
 class ComponentType(models.Model):
     name = models.CharField(max_length=100, unique=True)
-    description = models.TextField()
-
-class PackageType(models.Model):
-    name = models.CharField(max_lenthg=100, unique=True)
+    description = models.TextField(blank=True)
+    macro_type = models.ForeignKey(ComponentMacroType, null=True)
 
 class Component(models.Model):
     name = models.CharField(max_length=100, unique=True)
     component_type = models.ForeignKey(ComponentType, on_delete=models.CASCADE)
-    package_type = models.ForeignKey(PackageType, on_delete=models.CASCADE)
-    description = models.TextField()
-    datasheet_name = models.CharField(max_length=100, unique=True)
+    package = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
     value = models.FloatField()
 
 class Warehouse(models.Model):
     name = models.CharField(max_length=100, unique=True)
     updated = models.DateTimeField()
 
+class Position(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE)
+    address_a = models.CharField(max_length=50)
+    address_b = models.CharField(max_length=50)
+
 class Supplier(models.Model):
     name = models.CharField(max_length=100, unique=True)
     supplier_type = models.CharField(max_length=10, choices=SUPPLIER_TYPES)
-    website = models.TextField()
-    other_contacts = models.TextField()
+    website = models.TextField(blank=True)
+    other_contacts = models.TextField(blank=True)
 
 class Currency(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -49,12 +72,19 @@ class Unit(models.Model):
     is_ok = models.BooleanField(default=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     price_currency = models.ForeignKey(Currency, on_delete=models.CASCADE)
-    warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE)
+    location = models.ForeignKey(Position, on_delete=models.CASCADE)
     days_to_arrive = models.IntegerField()
-    count = models.IntegerField()
+    current_count = models.IntegerField()
 
 class PriceInfo(models.Model):
     component = models.ForeignKey(Component, on_delete=models.CASCADE)
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     price_currency = models.ForeignKey(Currency, on_delete=models.CASCADE)
+
+class Transaction(models.Model):
+    t_date = models.DateTimeField()
+    t_type = models.CharField(max_length=10, choices=TRANSACTION_TYPES)
+    description = models.TextField(blank=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    units = models.ManyToManyField(Unit)
