@@ -1,21 +1,39 @@
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse, JsonResponse
-from .models import Unit
-import simplejson
-
+from django.contrib.auth import authenticate, login
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import redirect
+import simplejson, sys
 
 @csrf_exempt
-def getter(request):
-    json_string = request.body.decode('utf-8')
-    return HttpResponse()
+def loginpage(request):
+    pars = request.POST
+    ret = ""
+    if pars["uname"] is not None and pars["pwd"] is not None:
+        user = authenticate(username=pars["uname"], password=pars["pwd"])
+        if user is not None:
+            if user.is_active:
+                login(request, user)
+                print("REDIRECTING...", file=sys.stderr)
+                return redirect("success   page    goes    here")
+            else:
+                ret = "{} {} Inactive".format(user.first_name, user.last_name)
+        else:
+            ret = "User not found"
+    else:
+        ret = "Login error"
+    print(ret, file=sys.stderr)
+    return HttpResponse(ret)
+
+@csrf_exempt
+@login_required(login_url='login    url    goes    here')
+def testpage(request):
+    return HttpResponse("Hello, {} {}".format(request.user.first_name, request.user.last_name))
 
 @csrf_exempt
 def all_items(request):
     objs = Unit.objects.all()
-    objs_val = {'objects': list(objs.values('component__name', 'component__component_type__name',
-                           'component__component_type__macro_type__name','where_from__name',
-                           'price','price_currency__symbol','location__name',
-                           'location__warehouse__name','current_count'))}
+    objs_val = {'objects': ''}
     ret = JsonResponse(objs_val)
     ret['Access-Control-Allow-Origin'] = '*'
     ret['charset'] = 'utf-8'

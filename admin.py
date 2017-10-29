@@ -2,108 +2,65 @@ from django.contrib import admin
 
 # Register your models here.
 
-from .models import ComponentType, ComponentMacroType, Component, Warehouse, Position, \
-    Supplier, Currency, Unit, PriceInfo, Transaction
-
-
-class UserAdmin(admin.ModelAdmin):
-    list_display = ('name', 'role', 'id')
-
-
-class ComponentAdmin(admin.ModelAdmin):
-    def typename(self, obj):
-        return obj.component_type.name
-    def macrotype_name(self, obj):
-        if obj.component_type.macro_type is not None:
-            return obj.component_type.macro_type.name
-        else:
-            return "-"
-    typename.short_description = 'Component type'
-    macrotype_name.short_description = 'Component macrotype'
-
-    list_display = ('name', 'macrotype_name', 'typename', 'package')
-
-
-class ComponentMacroTypeAdmin(admin.ModelAdmin):
-    list_display = ('name',)
-
+from .models import ComponentType, Package, Component, Warehouse, Location, \
+    Supplier, Device, AtomicTransaction, Transaction
 
 class ComponentTypeAdmin(admin.ModelAdmin):
-    def macrotype_name(self, obj):
-        if obj.macro_type is not None:
-            return obj.macro_type.name
-        else:
-            return "-"
-    macrotype_name.short_description = 'Component macrotype'
+    def full_name(self, obj):
+        return obj.get_full_name_string()
+    list_display = ('full_name', 'description')
 
-    list_display = ('macrotype_name', 'name')
-
-
-class WarehouseAdmin(admin.ModelAdmin):
+class PackageAdmin(admin.ModelAdmin):
     list_display = ('name',)
 
+class ComponentAdmin(admin.ModelAdmin):
+    def full_name(self, obj):
+        return obj.get_full_name()
+    def package_name(self, obj):
+        return obj.package.name
 
-class PositionAdmin(admin.ModelAdmin):
-    def description(self, obj):
-        return "{} @ {}".format(obj.name, obj.warehouse.name)
-    description.short_description = 'Description'
+    list_display = ('full_name', 'package_name')
 
-    list_display = ('description', 'address_a', 'address_b')
+class WarehouseAdmin(admin.ModelAdmin):
+    list_display = ('name', 'latitude', 'longitude')
 
+class LocationAdmin(admin.ModelAdmin):
+    def wh_name(self, obj):
+        return obj.warehouse.name
+    list_display = ('name', 'wh_name')
 
 class SupplierAdmin(admin.ModelAdmin):
-    list_display = ('name', 'supplier_type')
+    list_display = ('name', 'supplier_type', 'url')
 
+class DeviceAdmin(admin.ModelAdmin):
+    list_display = ('name',)
 
-class CurrencyAdmin(admin.ModelAdmin):
-    list_display = ('symbol', 'name', 'rate')
+class AtomicTransactionAdmin(admin.ModelAdmin):
+    def from_wh(self, obj):
+        if obj.from_location is not None:
+            return obj.from_location.warehouse.name
+        else:
+            return "..."
+    def to_wh(self, obj):
+        if obj.to_location is not None:
+            return obj.to_location.warehouse.name
+        else:
+            return "..."
 
-
-class UnitAdmin(admin.ModelAdmin):
     def comp_name(self, obj):
         return obj.component.name
-        comp_name.short_description = 'Component'
-    def position_name(self, obj):
-        return "{} @ {}".format(obj.location.name, obj.location.warehouse.name)
-        position_name.short_description = 'Location'
 
-    list_display = ('comp_name', 'current_count', 'position_name')
-
-class PriceInfoAdmin(admin.ModelAdmin):
-    def curr_info(self, obj):
-        return obj.price_currency.symbol
-        curr_info.short_description = 'Currency'
-    def realprice(self, obj):
-        return obj.price * obj.price_currency.rate
-        realprice.short_description = 'Price in roubles'
-    def comp_info(self, obj):
-        if obj.component.component_type.macro_type is not None:
-            return "{} ({} - {})".format(obj.component.name, obj.component.component_type.name,
-                                         obj.component.component_type.macro_type.name)
-        else:
-            return "{} ({})".format(obj.component.name, obj.component.component_type.name)
-
-        comp_info.short_description = 'Component'
-    def supplier_info(self, obj):
-        return obj.supplier.name
-        supplier_info.short_description = 'Supplier'
-
-    list_display = ('comp_info', 'price', 'curr_info', 'realprice', 'supplier_info')
+    list_display = ('from_wh', 'to_wh', 'comp_name', 'count', 'price')
 
 class TransactionAdmin(admin.ModelAdmin):
-    def user_info(self, obj):
-        return obj.user.name
-    user_info.short_description = 'User'
+    list_display = ('occured_at', 'transaction_type', 'name', 'supplier')
 
-    list_display = ('t_date', 't_type', 'user_info')
-
-admin.site.register(ComponentMacroType, ComponentMacroTypeAdmin)
 admin.site.register(ComponentType, ComponentTypeAdmin)
 admin.site.register(Component, ComponentAdmin)
 admin.site.register(Warehouse, WarehouseAdmin)
-admin.site.register(Position, PositionAdmin)
+admin.site.register(Location, LocationAdmin)
 admin.site.register(Supplier, SupplierAdmin)
-admin.site.register(Currency, CurrencyAdmin)
-admin.site.register(Unit, UnitAdmin)
-admin.site.register(PriceInfo, PriceInfoAdmin)
+admin.site.register(Package, PackageAdmin)
+admin.site.register(Device, DeviceAdmin)
+admin.site.register(AtomicTransaction, AtomicTransactionAdmin)
 admin.site.register(Transaction, TransactionAdmin)
