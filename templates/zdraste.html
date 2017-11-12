@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>EWHouse</title>
+	<link rel="stylesheet" href="../../static/css/style.css">
+</head>
+<body>
+	<div class="baselayer">
+		<div class="center-wrapper">
+			<label>EWHouse</label>
+		</div>
+	</div>
+	<div class="baselayer">
+		<div class="center-wrapper narrow">
+			<form action="/ewhouse/check_user/" method="post"> {% csrf_token %}
+				{% if login_unsuccessful %}
+				<label class="warning_lbl">Incorrect login!</label>
+				{% endif %}
+			    <label>Username</label>
+			    <input type="text" placeholder="Enter Username" name="uname" required>
+
+			    <label>Password</label>
+			    <input type="password" placeholder="Enter Password" name="pwd" required>
+
+			    <input type="hidden" name="next" value="{{ next }}"/>
+
+			    <button type="submit">Login</button>
+			</form>
+		</div>
+  	</div>
+</body>
+</html>

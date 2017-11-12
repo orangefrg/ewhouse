@@ -26,6 +26,7 @@ TRANSACTION_TYPES = (
 )
 
 MULTIPLIERS = {
+    (0, ""),
     (3, "k"),
     (6, "M"),
     (9, "G"),
@@ -40,7 +41,7 @@ MULTIPLIERS = {
 }
 
 class BasicInfo(models.Model):
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=50, unique=True)
     description = models.TextField(blank=True)
     class Meta:
         abstract = True
@@ -51,12 +52,55 @@ class Warehouse(BasicInfo):
     longitude = models.DecimalField(max_digits=10, decimal_places=6)
     managed_by = models.ManyToManyField(User)
 
+    def total_count(self):
+        tcount = 0
+        for loc in self.location_set.all():
+            tcount += loc.total_count()
+        return tcount
+
+    def variations(self):
+        vcount = 0
+        used = []
+        for loc in self.location_set.all():
+            for inv in loc.inventory_set.all():
+                if inv.unit not in used:
+                    vcount += 1
+                    used.append(inv.unit)
+        return vcount
+
+    def total_price(self):
+        tprice = 0
+        for loc in self.location_set.all():
+            tprice += loc.total_price()
+        return tprice
+
     def __str__(self):
         return self.name
 
 # Particular warehouse location
 class Location(BasicInfo):
     warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE)
+
+    def total_count(self):
+        tcount = 0
+        for inv in self.inventory_set.all():
+            tcount += inv.count
+        return tcount
+
+    def variations(self):
+        vcount = 0
+        used = []
+        for inv in self.inventory_set.all():
+            if inv.unit not in used:
+                vcount += 1
+                used.append(inv.unit)
+        return vcount
+
+    def total_price(self):
+        tprice = 0
+        for inv in self.inventory_set.all():
+            tprice += inv.price * inv.count
+        return tprice
 
     def get_full_name(self):
         return "{} @ {}".format(self.name, self.warehouse.name)
@@ -67,9 +111,12 @@ class Location(BasicInfo):
 
 # Component type, e.g. transistor or capacitor
 class ComponentType(BasicInfo):
-    upper_level = models.ForeignKey('self', null=True, on_delete=models.CASCADE)
+    upper_level = models.ForeignKey('self', null=True, default=None, blank=True, on_delete=models.CASCADE)
 
-    measurement_units = models.CharField(max_length=10, null=True)
+    measurement_units = models.CharField(max_length=10, null=True, blank=True)
+
+    def is_root(self):
+        return self.upper_level is None
 
     def get_full_name(self):
         fname = []
@@ -101,28 +148,26 @@ class Package(BasicInfo):
 class Component(BasicInfo):
     component_type = models.ForeignKey(ComponentType, on_delete=models.PROTECT)
     package = models.ForeignKey(Package, on_delete=models.PROTECT)
-    value = models.DecimalField(max_digits=30, decimal_places=6, null=True)
-    unit_multiplier = models.IntegerField(choices=MULTIPLIERS, null=True)
+    value = models.DecimalField(max_digits=30, decimal_places=6, default=None, null=True, blank=True)
+    unit_multiplier = models.IntegerField(choices=MULTIPLIERS, default=0)
     location = models.ManyToManyField(Location, through='Inventory')
 
     def get_units_name(self):
-        if self.component_type.get_units() is not None:
+        if self.component_type.get_units() != 0:
             return dict(MULTIPLIERS)[self.unit_multiplier] + self.component_type.get_units()
+        else:
+            return self.component_type.get_units()
 
     def get_full_value(self):
         if self.value is not None:
-            if self.unit_multiplier is not None:
+            if self.unit_multiplier != 0:
                 return self.value * 10 ^ self.unit_multiplier
             return self.value
 
     def get_string_value(self):
         if self.value is not None:
-            units = self.get_units_name()
-            if units is not None:
-                units = " " + units
-            else:
-                units = ""
-            return "{}{}".format(self.value, units)
+            strval = "{:f}".format(self.value).rstrip('0').rstrip('.')
+            return "{} {}".format(strval, self.get_units_name())
 
     def get_full_name(self):
         fname = self.name
@@ -153,7 +198,7 @@ class Transaction(BasicInfo):
     registered_at = models.DateTimeField(auto_now_add=True)
     occured_at = models.DateTimeField()
     transaction_type = models.CharField(max_length=10, choices=TRANSACTION_TYPES)
-    supplier = models.ForeignKey(Supplier, null=True)
+    supplier = models.ForeignKey(Supplier, null=True, blank=True)
 
     def __str__(self):
         return "{:%Y-%m-%d %H:%M} ({})".format(self.occured_at, self.name)
@@ -163,8 +208,8 @@ class AtomicTransaction(models.Model):
     component = models.ForeignKey(Component, on_delete=models.PROTECT)
     count = models.IntegerField()
     price = models.DecimalField(max_digits=10, decimal_places=2, null=True)
-    from_location = models.ForeignKey(Location, null=True, related_name='outgoing_transactions')
-    to_location = models.ForeignKey(Location, null=True, related_name='incoming_transactions')
+    from_location = models.ForeignKey(Location, null=True, blank=True, related_name='outgoing_transactions')
+    to_location = models.ForeignKey(Location, null=True, blank=True, related_name='incoming_transactions')
     transaction = models.ForeignKey(Transaction, on_delete=models.PROTECT)
 
     def __str__(self):

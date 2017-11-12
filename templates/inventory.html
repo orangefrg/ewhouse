@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>EWHouse</title>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+    <link rel="stylesheet" href="/static/css/sup-style.css"/>
+  </head>
+  <body>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
+
+    <nav class="navbar fixed-top navbar-light bg-light">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <a class="navbar-brand" href="/ewhouse/main">EWHouse</a>
+        </div>
+        <ul class="nav navbar-right list-inline">
+          <li class="active"><p class="navbar-text mr-3">Logged as {{name}} {{lastname}} ({{email}})</a></li>
+          <li class="list-inline-item"><a class="btn btn-danger navbar-btn" href="/ewhouse/logout">Logout</a></li>
+        </ul>
+      </div>    
+    </nav>
+
+    <div class="container">
+      <div class="row justify-content-center" id="functions">
+        <div class="btn-group" role="group" aria-label="First group">
+          <button type="button" class="btn btn-light disabled">Transactions</button>
+          <button type="button" class="btn btn-light active">Inventory</button>
+          <button type="button" class="btn btn-light disabled">Warehouses</button>
+          <button type="button" class="btn btn-light disabled">Library</button>
+        </div>
+      </div>
+      <div class="row justify-content-center" id="current-function">
+        <ul class="list-inline">
+          <li class="list-inline-item">
+            {% if wh is None %}
+              All warehouses
+            {% else %}
+              {{wh.name}}
+            {% endif %}
+          </li>
+          <li class="list-inline-item">
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#selectModal">Change</button>
+          </li>
+        </ul>
+      </div>
+      <div class="row">
+        <div class="col-sm-10">
+          <table class="table">
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">Component</th>
+                <th scope="col">Value</th>
+                <th scope="col">Package</th>
+                <th scope="col">Amount</th>
+                <th scope="col">Location</th>
+                <th scope="col">Warehouse</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for i in items %}
+              <tr>
+                <th scope="row">{{forloop.counter}}</th>
+                <td>{{i.unit.name}}</td>
+                <td>{{i.unit.get_string_value}}</td>
+                <td>{{i.unit.package.name}}</td>
+                <td>{{i.count}}</td>
+                <td>{{i.location.name}}</td>
+                <td>{{i.location.warehouse.name}}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  <div id="selectModal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+
+      <!-- Modal content-->
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+          <h4 class="modal-title">Warehouses</h4>
+        </div>
+        <div class="modal-body">
+          <ul class="list-group">
+            {% for w in warehouses %}
+              <li class="list-group-item mr-5">{{ w.name }} {% if w.total_count > 0 %}
+                <span class="badge badge-info mr-1">Всего: {{ w.total_count }}</span>
+                <span class="badge badge-primary mr-1">Компоненты: {{ w.variations }}</span>
+                <span class="badge badge-danger mr-1">{{ w.total_price }} руб.</span>
+              {% endif %}</li>
+            {% endfor %}
+          </ul>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  </body>
+</html>
+
+
+
+<!-- Trigger the modal with a button -->
+
+
+<!-- Modal -->
