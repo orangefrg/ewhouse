@@ -10,7 +10,7 @@ from .models import Package, Warehouse, Location, ComponentType, Component, Supp
 from .serializers import PackageSerializer, WarehouseSerializer, LocationSerializer, ComponentTypeSerializer,\
     ComponentSerializer, SupplierSerializer, InventorySerializer, DeviceSerializer, DevicePartsSerializer
 from .presenters import show_inventory
-
+from django.core.exceptions import ObjectDoesNotExist
 import simplejson, sys
 
 LOGIN_PAGE = '/ewhouse/name_yourself/'
@@ -105,8 +105,16 @@ def all_items(request):
 
 
 @login_required(login_url=LOGIN_PAGE)
-def inventory(request):
-    wh, units = show_inventory()
+def inventory(request, warehouse_id=None):
+    if warehouse_id is not None:
+        try:
+            wh = Warehouse.objects.get(id=warehouse_id)
+        except ObjectDoesNotExist:
+            wh = None
+            exc = "Склад не найден!"
+    else:
+        wh = None
+    units = show_inventory(wh)
     template = loader.get_template('inventory.html')
     context = {'name': request.user.first_name, 'lastname': request.user.last_name,
                'email': request.user.email, 'items': units, 'warehouse': wh, 'warehouses': Warehouse.objects.all()}

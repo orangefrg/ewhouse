@@ -19,11 +19,13 @@ router.register(r'dparts', DevicePartsViewSet)
 router.register(r'suppliers', SupplierViewSet)
 
 urlpatterns = [url(r'^name_yourself/$', loginpage, name='login'),
-               url(r'^test_page/$', testpage, name='testpage'),
-               url(r'^main/$', mainpage, name='mainpage'),
+               #url(r'^test_page/$', testpage, name='testpage'),
+               #url(r'^main/$', mainpage, name='mainpage'),
                url(r'^check_user/$', check_user, name='check_user'),
                url(r'^inventory/$', inventory, name='inventory'),
-               url(r'^logout/$', log_out, name='log_out')]
+               url(r'^inventory/(?P<warehouse_id>[0-9]+)/$', inventory, name='inventory'),
+               url(r'^logout/$', log_out, name='log_out'),
                #url(r'^api/v0.0/', include(router.urls, namespace='api'))]
+               ]
 
-urlpatterns += router.urls
+#urlpatterns += router.urls
