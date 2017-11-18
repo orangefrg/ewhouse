@@ -14,33 +14,33 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
 
-    <div class="container-fluid">
-      <div class="row">
-        <div class="col-12">
-          <h1>EWHouse login</h1>
+    <div class="container">
+      <div class="row justify-content-md-center">
+        <div class="col-sm-12 align-self-center">
+          <h1 class="text-center">EWHouse вход</h1>
         </div>
       </div>
-      <div class="row">
+      <div class="row justify-content-md-center">
         <form action="/ewhouse/check_user/" method="post"> {% csrf_token %}
           {% if login_unsuccessful %}
           <div class="alert alert-danger">
-            <strong>Login unsuccessful</strong> No such user or incorrect password.
+            <strong>Не удалось войти</strong> Неверное имя пользователя или пароль.
           </div>
           {% elif logged_out %}
           <div class="alert alert-info">
-            <strong>Logged out</strong> You can log back in using your username and password.
+            <strong>Выход из системы</strong> Вы можете войти обратно, используя свой логин и пароль.
           </div>
           {% endif %}
-          <div class="col-sm-12">
+          <div class="col-sm-12 align-self-center">
             <div class="form-group">
-              <label for="uname">Username:</label>
+              <label for="uname">Логин:</label>
               <input type="text" class="form-control" id="uname" name="uname" placeholder="Enter username" required>
             </div>
             <div class="form-group">
-              <label for="pwd">Password:</label>
+              <label for="pwd">Пароль:</label>
               <input type="password" class="form-control" id="pwd" name="pwd" placeholder="Enter password" required>
             </div>
-            <button type="submit" class="btn btn-default">Login</button>
+            <button type="submit" class="btn btn-default">Войти</button>
             <input type="hidden" name="next" value="{{ next }}"/>
           </div>
         </form>

@@ -9,8 +9,9 @@ from rest_framework import viewsets
 from .models import Package, Warehouse, Location, ComponentType, Component, Supplier, Inventory, Device, DeviceParts
 from .serializers import PackageSerializer, WarehouseSerializer, LocationSerializer, ComponentTypeSerializer,\
     ComponentSerializer, SupplierSerializer, InventorySerializer, DeviceSerializer, DevicePartsSerializer
-from .presenters import show_inventory
+from .presenters import show_inventory, get_available_libraries
 from django.core.exceptions import ObjectDoesNotExist
+from django.urls import reverse
 import simplejson, sys
 
 LOGIN_PAGE = '/ewhouse/name_yourself/'
@@ -118,4 +119,51 @@ def inventory(request, warehouse_id=None):
     template = loader.get_template('inventory.html')
     context = {'name': request.user.first_name, 'lastname': request.user.last_name,
                'email': request.user.email, 'items': units, 'warehouse': wh, 'warehouses': Warehouse.objects.all()}
+    return HttpResponse(template.render(context, request))
+
+@login_required(login_url=LOGIN_PAGE)
+def operations(request):
+    template = loader.get_template('operations.html')
+    context = {'name': request.user.first_name, 'lastname': request.user.last_name,
+               'email': request.user.email}
+    return HttpResponse(template.render(context, request))
+
+
+@login_required(login_url=LOGIN_PAGE)
+def library(request, library_name=None, entity_id=None, delete=False, exc=None):
+    libs = get_available_libraries()
+    curlib = None
+    curobj = None
+    if library_name is not None:
+        for l in libs:
+            if l["shortname"] == library_name:
+                curlib = l
+                if entity_id is not None:
+                    try:
+                        curobj = curlib["model"].objects.get(id=entity_id)
+                        if delete:
+                            curobj.delete()
+                            return redirect('library-plain', library_name=library_name)
+                        elif request.method == "POST":
+                            curlib["form"] = curlib["form"](request.POST, instance=curobj)
+                            if curlib["form"].is_valid():
+                                curlib["form"].save()
+                                exc = ("success", "Объект успешно изменён")
+                        else:
+                            curlib["form"] = curlib["form"](instance=curobj)
+                    except ObjectDoesNotExist:
+                        exc = ("danger", "Объект не найден")
+                        curobj = None
+                elif request.method == "POST":
+                    curlib["form"] = curlib["form"](request.POST)
+                    if curlib["form"].is_valid():
+                        curlib["form"].save()
+                        exc = ("success", "Объект успешно добавлен")
+                break
+        if curlib is None:
+            exc = ("danger", "Библиотека не найдена")
+    template = loader.get_template('library_main.html')
+    context = {'name': request.user.first_name, 'lastname': request.user.last_name,
+               'email': request.user.email, 'libs': libs, 'curlib': curlib, 'curobj': curobj,
+               'exc': exc}
     return HttpResponse(template.render(context, request))

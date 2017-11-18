@@ -8,21 +8,21 @@ USER_ROLES = (
     ("VIEWER", "Viewer"))
 
 SUPPLIER_TYPES = (
-    ("LOCAL", "Local"),
-    ("NATIONAL", "National"),
-    ("FOREIGN", "Foreign"),
-    ("STOCK", "Already in stock"),
-    ("OTHER", "Other")
+    ("LOCAL", "Местный"),
+    ("NATIONAL", "Федеральный"),
+    ("FOREIGN", "Зарубежный"),
+    ("STOCK", "Наличие"),
+    ("OTHER", "Прочее")
 )
 
 TRANSACTION_TYPES = (
-    ("BUY", "Buy"),
-    ("SELL", "Sell"),
-    ("MOVE", "Move"),
-    ("USE", "Use"),
-    ("LOSE", "Lose"),
-    ("GET", "Get"),
-    ("OTHER", "Other")
+    ("BUY", "Покупка"),
+    ("SELL", "Продажа"),
+    ("MOVE", "Перемещение"),
+    ("USE", "Использование"),
+    ("LOSE", "Утрата"),
+    ("GET", "Приобретение (кроме покупки)"),
+    ("OTHER", "Прочее")
 )
 
 MULTIPLIERS = {
@@ -41,16 +41,16 @@ MULTIPLIERS = {
 }
 
 class BasicInfo(models.Model):
-    name = models.CharField(max_length=50, unique=True)
-    description = models.TextField(blank=True)
+    name = models.CharField(max_length=50, unique=True, verbose_name="Имя")
+    description = models.TextField(blank=True, verbose_name="Описание")
     class Meta:
         abstract = True
 
 # Warehouse
 class Warehouse(BasicInfo):
-    latitude = models.DecimalField(max_digits=10, decimal_places=6)
-    longitude = models.DecimalField(max_digits=10, decimal_places=6)
-    managed_by = models.ManyToManyField(User)
+    latitude = models.DecimalField(max_digits=10, decimal_places=6, verbose_name="Широта")
+    longitude = models.DecimalField(max_digits=10, decimal_places=6, verbose_name="Долгота")
+    managed_by = models.ManyToManyField(User, verbose_name="Ответственный")
 
     def total_count(self):
         tcount = 0
@@ -79,7 +79,7 @@ class Warehouse(BasicInfo):
 
 # Particular warehouse location
 class Location(BasicInfo):
-    warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE)
+    warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE, verbose_name="Склад")
 
     def total_count(self):
         tcount = 0
@@ -111,9 +111,11 @@ class Location(BasicInfo):
 
 # Component type, e.g. transistor or capacitor
 class ComponentType(BasicInfo):
-    upper_level = models.ForeignKey('self', null=True, default=None, blank=True, on_delete=models.CASCADE)
+    upper_level = models.ForeignKey('self', null=True, default=None, blank=True,
+                                    on_delete=models.CASCADE, verbose_name="Относится к типу")
 
-    measurement_units = models.CharField(max_length=10, null=True, blank=True)
+    measurement_units = models.CharField(max_length=10, null=True,
+                                         blank=True, verbose_name="Единицы измерения")
 
     def is_root(self):
         return self.upper_level is None
@@ -146,11 +148,13 @@ class Package(BasicInfo):
 
 # Components. Full name goes here, such as STM32F103C8T8
 class Component(BasicInfo):
-    component_type = models.ForeignKey(ComponentType, on_delete=models.PROTECT)
-    package = models.ForeignKey(Package, on_delete=models.PROTECT)
-    value = models.DecimalField(max_digits=30, decimal_places=6, default=None, null=True, blank=True)
-    unit_multiplier = models.IntegerField(choices=MULTIPLIERS, default=0)
-    location = models.ManyToManyField(Location, through='Inventory')
+    component_type = models.ForeignKey(ComponentType, on_delete=models.PROTECT, verbose_name="Тип")
+    package = models.ForeignKey(Package, on_delete=models.PROTECT, verbose_name="Корпус")
+    value = models.DecimalField(max_digits=30, decimal_places=6, default=None,
+                                null=True, blank=True, verbose_name="Номинал")
+    unit_multiplier = models.IntegerField(choices=MULTIPLIERS,
+                                          default=0, verbose_name="Множитель единиц измерения (степень десяти)")
+    location = models.ManyToManyField(Location, through='Inventory', verbose_name="Расположение")
 
     def get_units_name(self):
         if self.component_type.get_units() != 0:
@@ -181,36 +185,38 @@ class Component(BasicInfo):
 
 # Suppliers
 class Supplier(BasicInfo):
-    supplier_type = models.CharField(max_length=10, choices=SUPPLIER_TYPES)
-    url = models.URLField(null=True)
+    supplier_type = models.CharField(max_length=10, choices=SUPPLIER_TYPES, verbose_name="Тип поставщика")
+    url = models.URLField(null=True, verbose_name="URL")
 
     def __str__(self):
         return self.name
 
 class Inventory(models.Model):
-    unit = models.ForeignKey(Component, on_delete=models.PROTECT)
-    location = models.ForeignKey(Location, on_delete=models.PROTECT)
-    count = models.PositiveIntegerField()
-    price = models.DecimalField(max_digits=10, decimal_places=2)
+    unit = models.ForeignKey(Component, on_delete=models.PROTECT, verbose_name="Компонент")
+    location = models.ForeignKey(Location, on_delete=models.PROTECT, verbose_name="Расположение")
+    count = models.PositiveIntegerField(verbose_name="Количество")
+    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Цена одного")
 
 # Transaction
 class Transaction(BasicInfo):
-    registered_at = models.DateTimeField(auto_now_add=True)
-    occured_at = models.DateTimeField()
-    transaction_type = models.CharField(max_length=10, choices=TRANSACTION_TYPES)
-    supplier = models.ForeignKey(Supplier, null=True, blank=True)
+    registered_at = models.DateTimeField(auto_now_add=True, verbose_name="Время регистрации")
+    occured_at = models.DateTimeField(verbose_name="Время исполнения")
+    transaction_type = models.CharField(max_length=10, choices=TRANSACTION_TYPES, verbose_name="Тип транзакции")
+    supplier = models.ForeignKey(Supplier, null=True, blank=True, verbose_name="Поставщик")
 
     def __str__(self):
         return "{:%Y-%m-%d %H:%M} ({})".format(self.occured_at, self.name)
 
 # Transaction part
 class AtomicTransaction(models.Model):
-    component = models.ForeignKey(Component, on_delete=models.PROTECT)
-    count = models.IntegerField()
-    price = models.DecimalField(max_digits=10, decimal_places=2, null=True)
-    from_location = models.ForeignKey(Location, null=True, blank=True, related_name='outgoing_transactions')
-    to_location = models.ForeignKey(Location, null=True, blank=True, related_name='incoming_transactions')
-    transaction = models.ForeignKey(Transaction, on_delete=models.PROTECT)
+    component = models.ForeignKey(Component, on_delete=models.PROTECT, verbose_name="Компонент")
+    count = models.IntegerField(verbose_name="Количество")
+    price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name="Цена одного")
+    from_location = models.ForeignKey(Location, null=True, blank=True,
+                                      related_name='outgoing_transactions', verbose_name="Откуда")
+    to_location = models.ForeignKey(Location, null=True, blank=True,
+                                    related_name='incoming_transactions', verbose_name="Куда")
+    transaction = models.ForeignKey(Transaction, on_delete=models.PROTECT, verbose_name="Родительская транзакция")
 
     def __str__(self):
         ret = ""
@@ -220,13 +226,15 @@ class AtomicTransaction(models.Model):
 
 # Device prototypes
 class Device(BasicInfo):
-    parts = models.ManyToManyField(Component, through='DeviceParts', related_name='used_in_devices')
-    component = models.ForeignKey(Component, on_delete=models.PROTECT, related_name='device_reference')
+    parts = models.ManyToManyField(Component, through='DeviceParts',
+                                   related_name='used_in_devices', verbose_name="Компоненты")
+    component = models.ForeignKey(Component, on_delete=models.PROTECT, related_name='device_reference',
+                                  verbose_name="Само изделие")
 
     def __str__(self):
         return self.name
 
 class DeviceParts(models.Model):
-    device = models.ForeignKey(Device, on_delete=models.PROTECT)
-    part = models.ForeignKey(Component, on_delete=models.PROTECT)
-    count = models.PositiveIntegerField()
+    device = models.ForeignKey(Device, on_delete=models.PROTECT, verbose_name="Изделие")
+    part = models.ForeignKey(Component, on_delete=models.PROTECT, verbose_name="Компонент")
+    count = models.PositiveIntegerField(verbose_name="Количество")

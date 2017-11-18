@@ -9,6 +9,8 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.10.16/css/dataTables.bootstrap4.min.css"/>
     <link rel="stylesheet" href="/static/css/sup-style.css"/>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet">
   </head>
   <body>
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
@@ -47,109 +49,74 @@
       } );
     </script>
 
-    <nav class="navbar fixed-top navbar-light bg-light">
-      <div class="container-fluid">
-        <div class="navbar-header">
-          <a class="navbar-brand" href="/ewhouse/main">EWHouse</a>
-        </div>
-        <ul class="nav navbar-right list-inline">
-          <li class="active"><p class="navbar-text mr-3">Вход выполнен как '{{name}} {{lastname}}' ({{email}})</a></li>
-          <li class="list-inline-item"><a class="btn btn-danger navbar-btn" href="/ewhouse/logout">Выход</a></li>
-        </ul>
-      </div>    
-    </nav>
+  {% include "upper_navbar.html" %}
 
     <div class="container">
-      <div class="row justify-content-center" id="functions">
+      <div class="row justify-content-center mb-5" id="functions">
         <div class="btn-group" role="group" aria-label="Navigation">
           <a role="button" class="btn btn-light" href="/ewhouse/ops">Операции</a>
-          <button type="button" class="btn btn-light active">Наличие</button>
+          <a role="button" class="btn btn-light" href="/ewhouse/inventory">Наличие</a>
           <button type="button" class="btn btn-light disabled">Склады</button>
-          <a role="button" class="btn btn-light" href="/ewhouse/library">Библиотека</a>
+          <button type="button" class="btn btn-light active">Библиотека</button>
         </div>
       </div>
-      <div class="row justify-content-center mt-5" id="current-function">
-        <ul class="list-inline">
-          <li class="list-inline-item">
-            {% if warehouse is None %}
-              Все склады
-            {% else %}
-              {{warehouse.name}}
-            {% endif %}
-          </li>
-          <li class="list-inline-item">
-            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#selectModal">Изменить</button>
-          </li>
-        </ul>
+      <div class="row justify-content-center mb-5" id="functions">
+        <div class="btn-group" role="group" aria-label="Libraries">
+          {% for f in libs %}
+            <a role="button" class="btn btn-light{% if curlib == f %} active{% endif %}" href="{% if curobj is not None %}../{% endif %}{% if curlib is not None %}../{% endif %}{{ f.shortname }}/">
+              {{ f.name }}
+            </a>
+          {% endfor %}
+        </div>
       </div>
-      <div class="row">
-        <div class="col-sm-10">
-          <table class="table" id="main-table">
+      {% load basic_filters %}
+      {% if exc is not None %}
+      <div class="row-mb-5" id="alert-exc">
+        <div class="alert alert-{{ exc.0 }}" role="alert">
+          {{ exc.1 }}
+        </div>
+      </div>
+      {% endif %}
+      {% if curlib is not None %}
+      <div class="row mb-5" id="table-wrapper">
+        <div class="col-sm-12">
+          {% if curobj is not None %}
+          <a class="btn btn-primary" href="{% if curobj is not None %}../{% endif %}">Добавить новый</a>
+          {% endif %}
+          <table class="table table-sm table-hover" id="main-table">
             <thead>
               <tr>
                 <th scope="col">#</th>
-                <th scope="col">Компонент</th>
-                <th scope="col">Номинал</th>
-                <th scope="col">Корпус</th>
-                <th scope="col">Количество</th>
-                <th scope="col">Расположение</th>
-                <th scope="col">Склад</th>
+                {% for f in curlib.form %}
+                  <th scope="col">{{ f.label }}</th>
+                {% endfor %}
               </tr>
             </thead>
             <tbody>
-              {% for i in items %}
-              <tr>
+              {% for obj in curlib.objs %}
+              <tr{% if obj == curobj %} class="table-active"{% endif %}>
                 <th scope="row">{{forloop.counter}}</th>
-                <td>{{i.unit.name}}</td>
-                <td>{{i.unit.get_string_value}}</td>
-                <td>{{i.unit.package.name}}</td>
-                <td>{{i.count}}</td>
-                <td>{{i.location.name}}</td>
-                <td>{{i.location.warehouse.name}}</td>
+                {% for f in curlib.form %}
+                  {% with fname=f.name %}
+                    <td>{{ obj|getmodelfield:fname }}</td>
+                  {% endwith %}
+                {% endfor %}
+                <td><a href="{% if curobj is not None %}../{% endif %}{{obj.id}}/"><i class="material-icons">create</i></a></td>
+                <td><a href="{% if curobj is not None %}../{% endif %}{{obj.id}}/delete/"><i class="material-icons">clear</i></a></td>
               </tr>
               {% endfor %}
             </tbody>
           </table>
         </div>
       </div>
-    </div>
-
-  <div id="selectModal" class="modal fade" role="dialog">
-    <div class="modal-dialog">
-
-      <!-- Modal content-->
-      <div class="modal-content">
-        <div class="modal-header">
-          <h4 class="modal-title">Склады</h4>
-        </div>
-        <div class="modal-body">
-          <div class="list-group">
-            {% for w in warehouses %}
-              <a href="{% if warehouse is not None %}../{% endif %}{{w.id}}/" class="list-group-item mr-5{% if warehouse == w %} active{% else %} list-group-item-action{% endif %}">{{ w.name }} {% if w.total_count > 0 %}
-                <span class="badge badge-info mr-1">Всего: {{ w.total_count }}</span>
-                <span class="badge badge-primary mr-1">Компоненты: {{ w.variations }}</span>
-                <span class="badge badge-danger mr-1">{{ w.total_price }} руб.</span>
-              {% endif %}</a>
-            {% endfor %}
-          </div>
-          <div class="list-group">
-            <a href="{% if warehouse is not None %}../{% endif %}" class="list-group-item mr-5{% if warehouse is None %} active{% else %} list-group-item-action{% endif %}">Все склады</a>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      <div class="row mb-5" id="main_form">
+        <div class="col-sm-12">
+          <form method="post">{% csrf_token %}
+            {% include "creation_form.html" with form=curlib.form current_object=curobj %}
+          </form>
         </div>
       </div>
-
+      {% endif %}
     </div>
-  </div>
-
   </body>
 </html>
-
-
-
-<!-- Trigger the modal with a button -->
-
-
-<!-- Modal -->
