@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <title>EWHouse</title>
+    <title>EWHouse - операции</title>
 
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -14,27 +14,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
 
-    <nav class="navbar fixed-top navbar-light bg-light">
-      <div class="container-fluid">
-        <div class="navbar-header">
-          <a class="navbar-brand" href="/ewhouse/main">EWHouse</a>
-        </div>
-        <ul class="nav navbar-right list-inline">
-          <li class="active"><p class="navbar-text mr-3">Вход выполнен как '{{name}} {{lastname}}' ({{email}})</a></li>
-          <li class="list-inline-item"><a class="btn btn-danger navbar-btn" href="/ewhouse/logout">Выход</a></li>
-        </ul>
-      </div>    
-    </nav>
+    {% include "upper_navbar.html" %}
 
-    <div class="container">
-      <div class="row justify-content-center" id="functions">
-        <div class="btn-group" role="group" aria-label="Navigation">
-          <button type="button" class="btn btn-light active">Операции</button>
-          <a role="button" class="btn btn-light" href="/ewhouse/inventory">Наличие</a>
-          <button type="button" class="btn btn-light disabled">Склады</button>
-          <a role="button" class="btn btn-light" href="/ewhouse/library">Библиотека</a>
-        </div>
-      </div>
+    <div class="container">    
+      {% include "mode_selector.html" with cur_mode="ops" %}
     </div>
   </body>
 </html>

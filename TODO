@@ -1,0 +1,7 @@
+TODO:
+-1. Add and edit warehouses
+0. Pass errors to redirects (thru ?exc=...)
+1. Create transactions
+2. Show delete/edit errors
+3. Edit user profile
+4. Add new users, manage access rights

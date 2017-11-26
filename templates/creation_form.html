@@ -7,13 +7,19 @@
 		</div>
 		<ul class="list-group">
 			{% for err in field.errors %}
-			<li class="list-group-item">err</li>
+			<li class="list-group-item">{{ err }}</li>
 			{% endfor %}
 		</ul>
 	</div>
 {% endfor %}
-{% if current_object is None %}
-<button type="submit" class="btn btn-primary">Создать элемент</button>
+{% if protected is not True %}
+	{% if current_object is None %}
+	<button type="submit" class="btn btn-primary">Создать элемент</button>
+	{% else %}
+	<button type="submit" class="btn btn-success">Изменить элемент</button>
+	{% endif %}
 {% else %}
-<button type="submit" class="btn btn-success">Изменить элемент</button>
+    <div class="alert alert-danger" role="alert">
+      Недостатчно прав для операции
+    </div>
 {% endif %}

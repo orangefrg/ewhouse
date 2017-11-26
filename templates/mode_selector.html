@@ -1,0 +1,24 @@
+<div class="row justify-content-center mb-5" id="functions">
+	<div class="btn-group" role="group" aria-label="Navigation">
+		{% if cur_mode == "ops" %}
+			<button type="button" class="btn btn-light active">Операции</button>
+		{% else %}
+			<a role="button" class="btn btn-light" href="/ewhouse/ops">Операции</a>
+		{% endif %}
+		{% if cur_mode == "inv" %}
+			<button type="button" class="btn btn-light active">Наличие</button>
+		{% else %}
+			<a role="button" class="btn btn-light" href="/ewhouse/inventory">Наличие</a>
+		{% endif %}
+		{% if cur_mode == "wrh" %}
+			<button type="button" class="btn btn-light active">Склады</button>
+		{% else %}
+			<a role="button" class="btn btn-light" href="/ewhouse/warehouses">Склады</a>
+		{% endif %}
+		{% if cur_mode == "lib" %}
+			<button type="button" class="btn btn-light active">Библиотека</button>
+		{% else %}
+			<a role="button" class="btn btn-light" href="/ewhouse/library">Библиотека</a>
+		{% endif %}
+	</div>
+</div>

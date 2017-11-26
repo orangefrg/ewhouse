@@ -1,6 +1,6 @@
 from django.conf.urls import url, include
 from django.contrib import admin
-from ewhouse.views import loginpage, check_user, log_out, inventory, operations, library
+from ewhouse.views import loginpage, check_user, log_out, inventory, operations, library, warehouses
 from ewhouse.views import PackageViewSet, WarehouseViewSet, LocationViewSet, ComponentTypeViewSet, ComponentViewSet, \
     InventoryViewSet, DeviceViewSet, DevicePartsViewSet, SupplierViewSet
 from rest_framework import routers
@@ -26,6 +26,14 @@ urlpatterns = [url(r'^name_yourself/$', loginpage, name='login'),
                url(r'^inventory/(?P<warehouse_id>[0-9]+)/$', inventory, name='inventory'),
                url(r'^logout/$', log_out, name='log_out'),
                url(r'^ops/$', operations, name='operations'),
+               url(r'^warehouses/$', warehouses, name='warehouses-all'),
+               url(r'^warehouses/(?P<wh_id>[0-9]+)/$', warehouses, name='warehouses-one'),
+               url(r'^warehouses/edit/$', warehouses, {'edit_wh': True}, name='warehouses-all-edit'),
+               url(r'^warehouses/(?P<wh_id>[0-9]+)/(?P<loc_id>[0-9]+)/$', warehouses, name='warehouses-loc'),
+               url(r'^warehouses/(?P<wh_id>[0-9]+)/delete/$', warehouses, {'delete_wh': True}, name='warehouses-one-del'),
+               url(r'^warehouses/(?P<wh_id>[0-9]+)/edit/$', warehouses, {'edit_wh': True}, name='warehouses-one-edit'),
+               url(r'^warehouses/(?P<wh_id>[0-9]+)/(?P<loc_id>[0-9]+)/delete/$', warehouses, {'delete_loc': True},
+                   name='warehouses-loc-del'),
                url(r'^library/$', library, name='library'),
                url(r'^library/(?P<library_name>[\w]+)/$', library, name='library-plain'),
                url(r'^library/(?P<library_name>[\w]+)/(?P<entity_id>[0-9]+)/$', library, name='library-obj'),

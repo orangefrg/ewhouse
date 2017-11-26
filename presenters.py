@@ -1,4 +1,4 @@
-from .models import Component, ComponentType, Package, Supplier, Inventory, Warehouse
+from .models import Component, ComponentType, Package, Supplier, Inventory, Warehouse, Location
 from django import forms
 
 class ComponentTypeForm(forms.ModelForm):
@@ -20,6 +20,16 @@ class SupplierForm(forms.ModelForm):
     class Meta:
         model = Supplier
         fields = ["name", "description", "supplier_type", "url"]
+
+class WarehouseForm(forms.ModelForm):
+    class Meta:
+        model = Warehouse
+        fields = ["name", "description", "latitude", "longitude", "managed_by"]
+
+class LocationForm(forms.ModelForm):
+    class Meta:
+        model = Location
+        fields = ["name", "description", "warehouse"]
 
 LIBS = [("Типы компонентов", "ctypes", ComponentType, ComponentTypeForm),
         ("Компоненты", "comps", Component, ComponentForm),

@@ -9,13 +9,14 @@ from rest_framework import viewsets
 from .models import Package, Warehouse, Location, ComponentType, Component, Supplier, Inventory, Device, DeviceParts
 from .serializers import PackageSerializer, WarehouseSerializer, LocationSerializer, ComponentTypeSerializer,\
     ComponentSerializer, SupplierSerializer, InventorySerializer, DeviceSerializer, DevicePartsSerializer
-from .presenters import show_inventory, get_available_libraries
+from .presenters import show_inventory, get_available_libraries, WarehouseForm, LocationForm
 from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
+from django import forms
 import simplejson, sys
 
 LOGIN_PAGE = '/ewhouse/name_yourself/'
-MAIN_PAGE = '/ewhouse/main/'
+MAIN_PAGE = '/ewhouse/inventory/'
 
 class PackageViewSet(viewsets.ModelViewSet):
     queryset = Package.objects.all()
@@ -126,6 +127,86 @@ def operations(request):
     template = loader.get_template('operations.html')
     context = {'name': request.user.first_name, 'lastname': request.user.last_name,
                'email': request.user.email}
+    return HttpResponse(template.render(context, request))
+
+
+@login_required(login_url=LOGIN_PAGE)
+def warehouses(request, wh_id=None, loc_id=None, delete_loc=None, exc=None, delete_wh=None, edit_wh=None):
+    template = loader.get_template('warehouses.html')
+    warehouse = None
+    location = None
+    exc = None
+    warehouses = Warehouse.objects.all()
+    loc_form = LocationForm()
+    wh_form = WarehouseForm()
+    if wh_id is not None:
+        try:
+            warehouse = Warehouse.objects.get(id=wh_id)
+            if delete_wh:
+                if request.user in warehouse.managed_by.all():
+                    warehouse.delete()
+                    return redirect('warehouses-all')
+                else:
+                    exc = ("danger", "Недостаточно прав для удаления склада")
+            elif edit_wh:
+                if request.method == "POST":
+                    if request.user in warehouse.managed_by.all():
+                        wh_form = WarehouseForm(request.post, instance=warehouse)
+                        if wh_form.is_valid():
+                            wh = wh_form.save()
+                            exc = ("success", "Склад успешно изменён")
+                            return redirect('warehouses-one', wh_id = wh.id)
+                        else:
+                            exc = ("warning", "Ошибка заполнения формы")
+                            return redirect('warehouses-all')
+                    else:
+                        exc = ("danger", "Недостаточно прав для редактирования склада")
+            elif loc_id is not None:
+                location = Location.objects.filter(warehouse=warehouse).get(id=loc_id)
+                if delete_loc:
+                    if request.user not in location.warehouse.managed_by.all():
+                        exc = ("danger", "Недостаточно прав для редактирования склада")
+                    else:
+                        location.delete()
+                        return redirect('warehouses-one', wh_id=location.warehouse.id)
+                elif request.method == "POST":
+                    loc_form = LocationForm(request.POST, instance=location)
+                    if loc_form.is_valid():
+                        if request.user not in location.warehouse.managed_by.all():
+                            exc = ("danger", "Недостаточно прав для редактирования склада")
+                        else:
+                            loc_form.save()
+                            exc = ("success", "Расположение успешно изменено")
+                    else:
+                        exc = ("warning", "Ошибка заполнения формы")
+                else:
+                    loc_form = LocationForm(instance=location)
+
+            elif request.method == "POST":
+                loc_form = LocationForm(request.POST)
+                if loc_form.is_valid():
+                    loc_form.save()
+                    exc = ("success", "Расположение успешно добавлено")
+                else:
+                    exc = ("warning", "Ошибка заполнения формы")
+            loc_form.fields['warehouse'].initial = warehouse.id
+            loc_form.fields['warehouse'].widget = forms.HiddenInput()
+
+        except ObjectDoesNotExist:
+            exc = ("danger", "Склад или расположение не найдены")
+            return redirect('warehouses-all', exc=exc)
+    elif edit_wh:
+        wh_form = WarehouseForm(request.POST)
+        if wh_form.is_valid():
+            wh_form.save()
+            return redirect('warehouses-all')
+        else:
+            exc = ("warning", "Ошибка заполнения формы")
+
+    context = {'name': request.user.first_name, 'lastname': request.user.last_name,
+               'email': request.user.email, 'current_wh': warehouse, 'current_loc': location,
+               'all_wh': warehouses, 'exc': exc, 'current_usr': request.user,
+               'loc_form': loc_form, 'wh_form': wh_form}
     return HttpResponse(template.render(context, request))
 
 

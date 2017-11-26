@@ -1,16 +1,15 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <title>EWHouse</title>
+    <title>EWHouse - библиотеки</title>
 
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.10.16/css/dataTables.bootstrap4.min.css"/>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link rel="stylesheet" href="/static/css/sup-style.css"/>
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
-      rel="stylesheet">
   </head>
   <body>
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
@@ -52,14 +51,7 @@
   {% include "upper_navbar.html" %}
 
     <div class="container">
-      <div class="row justify-content-center mb-5" id="functions">
-        <div class="btn-group" role="group" aria-label="Navigation">
-          <a role="button" class="btn btn-light" href="/ewhouse/ops">Операции</a>
-          <a role="button" class="btn btn-light" href="/ewhouse/inventory">Наличие</a>
-          <button type="button" class="btn btn-light disabled">Склады</button>
-          <button type="button" class="btn btn-light active">Библиотека</button>
-        </div>
-      </div>
+      {% include "mode_selector.html" with cur_mode="lib" %}
       <div class="row justify-content-center mb-5" id="functions">
         <div class="btn-group" role="group" aria-label="Libraries">
           {% for f in libs %}

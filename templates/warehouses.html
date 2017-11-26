@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>EWHouse - склады</title>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="/static/css/sup-style.css"/>
+
+  </head>
+  <body>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD0hYid9ryztp1x0e2GMdJgo0PK98Nv1qE&callback=initMap" async defer></script>
+
+
+    {% include "upper_navbar.html" %}
+
+    <div class="container">
+      {% include "mode_selector.html" with cur_mode="wrh" %}
+      {% if exc is not None %}
+      <div class="row mb-1">    
+        <div class="alert alert-{{ exc.0 }}" role="alert">
+          {{ exc.1 }}
+        </div>
+      </div>
+      {% endif %}
+      <div class="row mb-5">
+        <div class="col-sm-4">
+          <div class="list-group">
+            {% for w in all_wh %}
+              {% if current_wh == w %}
+                <button type="button" class="list-group-item list-group-item-action active" disabled>{{ w.name }}{% if current_usr in w.managed_by.all %}<span class="badge badge-primary ml-1">Ваш</span>{% endif %}</button>
+              {% else %}
+                <a href="{% if current_wh is not None %}../{% endif %}{% if current_loc is not None %}../{% endif %}{{ w.id }}" class="list-group-item list-group-item-action">{{ w.name }}{% if current_usr in w.managed_by.all %}<span class="badge badge-primary ml-1">Ваш</span>{% endif %}</a>
+              {% endif %}
+            {% endfor %}
+            <div class="list-group-item">
+              <div class="row justify-content-center">
+                <div class="col-sm-4">
+                  <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#editWHModal">Добавить</button>
+                </div>
+                {% if current_wh is not None and current_usr in current_wh.managed_by.all %}
+                  <div class="col-sm-4">
+                    <a href="{% if current_loc is not None %}../{% endif %}delete" class="btn btn-danger">Удалить</a>
+                  </div>
+                  <div class="col-sm-4">
+                    <button type="button" class="btn btn-success" data-toggle="modal" data-target="#editWHModal">Изменить</button>
+                  </div>
+                {% endif %}
+              </div>   
+            </div>
+          </div>
+        </div>      
+        <div class="col-sm-8">
+          <div id="map"></div>
+        </div>
+      </div>
+    </div>
+    {% if current_wh is not None %}
+    <div class="container">
+      <div class="row justify-content-center mb-1">
+        <div class="col-sm-6">
+          <hr/>
+          <h4>Склад "{{ current_wh.name }}" - расположения</h4>
+        </div>
+      </div>
+      <div class="row justify-content-center mb-5">
+        <div class="col-sm-3">
+          <div class="list-group">
+          {% for l in current_wh.location_set.all %}
+            {% if current_loc == l %}
+              <span class="list-group-item list-group-item-action active" disabled>{{ l.name }}<a href="delete" class="btn btn-danger ml-4">Удалить</a></span>
+            {% else %}
+              <a role="button" class="list-group-item list-group-item-action" href="{% if current_loc is not None %}../{% endif %}{{ l.id }}">{{ l.name }}</a>
+            {% endif %}
+          {% endfor %}
+          {% if current_loc is not None %}
+            <a role="button" class="list-group-item list-group-item-action list-group-item-info" href="../">Добавить новую</a>
+          {% endif %}
+          </div>
+        </div>
+        <div class="col-sm-9">
+          <form method="post">{% csrf_token %}
+            {% if current_usr in current_wh.managed_by.all %}
+              {% include "creation_form.html" with form=loc_form current_object=current_loc %}
+            {% else %}
+              {% include "creation_form.html" with form=loc_form current_object=current_loc protected=True %}
+            {% endif %}
+          </form>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+    <script>
+      function initMap() {
+        var styles = [
+                      {
+                          "featureType": "administrative",
+                          "elementType": "labels.text.fill",
+                          "stylers": [
+                              {
+                                  "color": "#444444"
+                              }
+                          ]
+                      },
+                      {
+                          "featureType": "landscape",
+                          "elementType": "all",
+                          "stylers": [
+                              {
+                                  "color": "#f2f2f2"
+                              }
+                          ]
+                      },
+                      {
+                          "featureType": "poi",
+                          "elementType": "all",
+                          "stylers": [
+                              {
+                                  "visibility": "off"
+                              }
+                          ]
+                      },
+                      {
+                          "featureType": "road",
+                          "elementType": "all",
+                          "stylers": [
+                              {
+                                  "saturation": -100
+                              },
+                              {
+                                  "lightness": 45
+                              }
+                          ]
+                      },
+                      {
+                          "featureType": "road.highway",
+                          "elementType": "all",
+                          "stylers": [
+                              {
+                                  "visibility": "simplified"
+                              }
+                          ]
+                      },
+                      {
+                          "featureType": "road.arterial",
+                          "elementType": "labels.icon",
+                          "stylers": [
+                              {
+                                  "visibility": "off"
+                              }
+                          ]
+                      },
+                      {
+                          "featureType": "transit",
+                          "elementType": "all",
+                          "stylers": [
+                              {
+                                  "visibility": "off"
+                              }
+                          ]
+                      },
+                      {
+                          "featureType": "water",
+                          "elementType": "all",
+                          "stylers": [
+                              {
+                                  "color": "#17365d"
+                              },
+                              {
+                                  "visibility": "on"
+                              }
+                          ]
+                      }
+                  ];
+        var loc;
+        var map;
+        var bounds = new google.maps.LatLngBounds();
+        function addMarker(location, name, active) {          
+          var marker = new google.maps.Marker({
+          position: location,
+          map: map,
+          title: name,
+          status: active
+          });
+        }
+        map = new google.maps.Map(document.getElementById('map'), {mapTypeId: google.maps.MapTypeId.ROADMAP});
+        {% for w in all_wh %}
+          loc = new google.maps.LatLng("{{w.latitude}}","{{w.longitude}}");
+          bounds.extend(loc);
+          addMarker(loc, '{{w.name}}', "active");
+        {% endfor %}
+        map.fitBounds(bounds);
+        map.panToBounds(bounds);
+        map.set('styles', styles);
+      }
+    </script>
+
+    <div id="editWHModal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">Редактировать склад</h4>
+        </div>
+        <div class="modal-body">
+          <form method="post" action="edit"
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-dismiss="modal">Сохранить</button>
+          <button type="button" class="btn btn-danger" data-dismiss="modal">Закрыть</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  </body>
+</html>
