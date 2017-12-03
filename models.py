@@ -77,6 +77,9 @@ class Warehouse(BasicInfo):
     def __str__(self):
         return self.name
 
+    class Meta:
+        ordering = ('name',)
+
 # Particular warehouse location
 class Location(BasicInfo):
     warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE, verbose_name="Склад")
@@ -108,6 +111,8 @@ class Location(BasicInfo):
     def __str__(self):
         return self.get_full_name()
 
+    class Meta:
+        ordering = ('name',)
 
 # Component type, e.g. transistor or capacitor
 class ComponentType(BasicInfo):
@@ -140,6 +145,9 @@ class ComponentType(BasicInfo):
 
     def __str__(self):
         return self.get_full_name_string()
+
+    class Meta:
+        ordering = ('get_full_name_string',)
 
 # Package type, e.g. TO220 or LQFP144
 class Package(BasicInfo):
@@ -183,6 +191,9 @@ class Component(BasicInfo):
     def __str__(self):
         return self.get_full_name()
 
+    class Meta:
+        ordering = ('name',)
+
 # Suppliers
 class Supplier(BasicInfo):
     supplier_type = models.CharField(max_length=10, choices=SUPPLIER_TYPES, verbose_name="Тип поставщика")
@@ -191,11 +202,23 @@ class Supplier(BasicInfo):
     def __str__(self):
         return self.name
 
+    class Meta:
+        ordering = ('name',)
+
 class Inventory(models.Model):
     unit = models.ForeignKey(Component, on_delete=models.PROTECT, verbose_name="Компонент")
     location = models.ForeignKey(Location, on_delete=models.PROTECT, verbose_name="Расположение")
     count = models.PositiveIntegerField(verbose_name="Количество")
     price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Цена одного")
+
+    def get_name(self):
+        return self.unit.name
+
+    def __str__(self):
+        return "{} x{} ({})".format(self.unit.name, self.count, self.location.get_full_name())
+
+    class Meta:
+        ordering = ('get_name',)
 
 # Transaction
 class Transaction(BasicInfo):
@@ -233,6 +256,9 @@ class Device(BasicInfo):
 
     def __str__(self):
         return self.name
+
+    class Meta:
+        ordering = ('name',)
 
 class DeviceParts(models.Model):
     device = models.ForeignKey(Device, on_delete=models.PROTECT, verbose_name="Изделие")
