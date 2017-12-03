@@ -95,17 +95,6 @@ def log_out(request):
     logout(request)
     return redirect(LOGIN_PAGE + '?logout=true')
 
-
-@login_required(login_url=LOGIN_PAGE)
-def all_items(request):
-    objs = Unit.objects.all()
-    objs_val = {'objects': ''}
-    ret = JsonResponse(objs_val)
-    ret['Access-Control-Allow-Origin'] = '*'
-    ret['charset'] = 'utf-8'
-    return ret
-
-
 @login_required(login_url=LOGIN_PAGE)
 def inventory(request, warehouse_id=None):
     if warehouse_id is not None:

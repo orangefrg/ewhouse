@@ -202,7 +202,7 @@ class Transaction(BasicInfo):
     registered_at = models.DateTimeField(auto_now_add=True, verbose_name="Время регистрации")
     occured_at = models.DateTimeField(verbose_name="Время исполнения")
     transaction_type = models.CharField(max_length=10, choices=TRANSACTION_TYPES, verbose_name="Тип транзакции")
-    supplier = models.ForeignKey(Supplier, null=True, blank=True, verbose_name="Поставщик")
+    supplier = models.ForeignKey(Supplier, null=True, blank=True, verbose_name="Поставщик", on_delete=models.PROTECT)
 
     def __str__(self):
         return "{:%Y-%m-%d %H:%M} ({})".format(self.occured_at, self.name)
