@@ -5,10 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect
 from django.template import loader
 from .models import Package
-from rest_framework import viewsets
 from .models import Package, Warehouse, Location, ComponentType, Component, Supplier, Inventory, Device, DeviceParts
-from .serializers import PackageSerializer, WarehouseSerializer, LocationSerializer, ComponentTypeSerializer,\
-    ComponentSerializer, SupplierSerializer, InventorySerializer, DeviceSerializer, DevicePartsSerializer
 from .presenters import show_inventory, get_available_libraries, WarehouseForm, LocationForm
 from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
@@ -17,42 +14,6 @@ import simplejson, sys
 
 LOGIN_PAGE = '/ewhouse/name_yourself/'
 MAIN_PAGE = '/ewhouse/inventory/'
-
-class PackageViewSet(viewsets.ModelViewSet):
-    queryset = Package.objects.all()
-    serializer_class = PackageSerializer
-
-class WarehouseViewSet(viewsets.ModelViewSet):
-    queryset = Warehouse.objects.all()
-    serializer_class = WarehouseSerializer
-
-class LocationViewSet(viewsets.ModelViewSet):
-    queryset = Location.objects.all()
-    serializer_class = LocationSerializer
-
-class ComponentTypeViewSet(viewsets.ModelViewSet):
-    queryset = ComponentType.objects.all()
-    serializer_class = ComponentTypeSerializer
-
-class ComponentViewSet(viewsets.ModelViewSet):
-    queryset = Component.objects.all()
-    serializer_class = ComponentSerializer
-
-class InventoryViewSet(viewsets.ModelViewSet):
-    queryset = Inventory.objects.all()
-    serializer_class = InventorySerializer
-
-class DeviceViewSet(viewsets.ModelViewSet):
-    queryset = Device.objects.all()
-    serializer_class = DeviceSerializer
-
-class DevicePartsViewSet(viewsets.ModelViewSet):
-    queryset = DeviceParts.objects.all()
-    serializer_class = DevicePartsSerializer
-
-class SupplierViewSet(viewsets.ModelViewSet):
-    queryset = Supplier.objects.all()
-    serializer_class = SupplierSerializer
 
 def loginpage(request):
     template = loader.get_template('login.html')

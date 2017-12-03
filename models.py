@@ -202,7 +202,7 @@ class Transaction(BasicInfo):
     registered_at = models.DateTimeField(auto_now_add=True, verbose_name="Время регистрации")
     occured_at = models.DateTimeField(verbose_name="Время исполнения")
     transaction_type = models.CharField(max_length=10, choices=TRANSACTION_TYPES, verbose_name="Тип транзакции")
-    supplier = models.ForeignKey(Supplier, null=True, blank=True, verbose_name="Поставщик")
+    supplier = models.ForeignKey(Supplier, null=True, blank=True, verbose_name="Поставщик", on_delete=models.PROTECT)
 
     def __str__(self):
         return "{:%Y-%m-%d %H:%M} ({})".format(self.occured_at, self.name)
@@ -213,9 +213,9 @@ class AtomicTransaction(models.Model):
     count = models.IntegerField(verbose_name="Количество")
     price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name="Цена одного")
     from_location = models.ForeignKey(Location, null=True, blank=True,
-                                      related_name='outgoing_transactions', verbose_name="Откуда")
+                                      related_name='outgoing_transactions', verbose_name="Откуда", on_delete=models.SET_NULL)
     to_location = models.ForeignKey(Location, null=True, blank=True,
-                                    related_name='incoming_transactions', verbose_name="Куда")
+                                    related_name='incoming_transactions', verbose_name="Куда", on_delete=models.SET_NULL)
     transaction = models.ForeignKey(Transaction, on_delete=models.PROTECT, verbose_name="Родительская транзакция")
 
     def __str__(self):
