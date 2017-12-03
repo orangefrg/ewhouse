@@ -147,7 +147,7 @@ class ComponentType(BasicInfo):
         return self.get_full_name_string()
 
     class Meta:
-        ordering = ('get_full_name_string',)
+        ordering = ('upper_level','name',)
 
 # Package type, e.g. TO220 or LQFP144
 class Package(BasicInfo):
@@ -218,7 +218,7 @@ class Inventory(models.Model):
         return "{} x{} ({})".format(self.unit.name, self.count, self.location.get_full_name())
 
     class Meta:
-        ordering = ('get_name',)
+        ordering = ('unit',)
 
 # Transaction
 class Transaction(BasicInfo):
