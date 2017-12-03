@@ -92,6 +92,7 @@ def warehouses(request, wh_id=None, loc_id=None, delete_loc=None, exc=None, dele
     if wh_id is not None:
         try:
             warehouse = Warehouse.objects.get(id=wh_id)
+            wh_form = WarehouseForm(instance=warehouse)
             if delete_wh:
                 if request.user in warehouse.managed_by.all():
                     warehouse.delete()
@@ -101,7 +102,7 @@ def warehouses(request, wh_id=None, loc_id=None, delete_loc=None, exc=None, dele
             elif edit_wh:
                 if request.method == "POST":
                     if request.user in warehouse.managed_by.all():
-                        wh_form = WarehouseForm(request.post, instance=warehouse)
+                        wh_form = WarehouseForm(request.POST, instance=warehouse)
                         if wh_form.is_valid():
                             wh = wh_form.save()
                             exc = ("success", "Склад успешно изменён")

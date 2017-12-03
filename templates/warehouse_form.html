@@ -1,19 +1,26 @@
 {% load basic_filters %}
-{% for field in form %}
-	<div class="form-group row">
-		<label for="example-search-input" class="col-2 col-form-label">{{ field.label }}</label>
-		<div class="col-10">
-			{{ field|addclass:'form-control' }}
+<form action="{% if wh is not None and current_object is None %}../{% endif %}{% if loc is not None %}../{% endif %}edit/" method="post">{% csrf_token %}
+	<div class="modal-body">
+	{% for field in form %}
+		<div class="form-group row">
+			<label for="example-search-input" class="col-3 col-form-label">{{ field.label }}</label>
+			<div class="col-9">
+				{{ field|addclass:'form-control' }}
+			</div>
+			<ul class="list-group">
+				{% for err in field.errors %}
+				<li class="list-group-item">err</li>
+				{% endfor %}
+			</ul>
 		</div>
-		<ul class="list-group">
-			{% for err in field.errors %}
-			<li class="list-group-item">err</li>
-			{% endfor %}
-		</ul>
+	{% endfor %}
 	</div>
-{% endfor %}
-{% if current_object is None %}
-<button type="submit" class="btn btn-primary">Создать элемент</button>
-{% else %}
-<button type="submit" class="btn btn-success">Изменить элемент</button>
-{% endif %}
+	<div class="modal-footer">
+		{% if current_object is None %}
+		<button type="submit" class="btn btn-primary">Добавить</button>
+		{% else %}
+		<button type="submit" class="btn btn-success">Изменить</button>
+		{% endif %}
+		<button type="button" class="btn btn-danger" data-dismiss="modal">Закрыть</button>
+	</div>
+</form>

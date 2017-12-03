@@ -1,5 +1,5 @@
 TODO:
--1. Add and edit warehouses
+-1. Comfortable sorting for component types
 0. Pass errors to redirects (thru ?exc=...)
 1. Create transactions
 2. Show delete/edit errors

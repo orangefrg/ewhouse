@@ -147,7 +147,7 @@ class ComponentType(BasicInfo):
         return self.get_full_name_string()
 
     class Meta:
-        ordering = ('upper_level','name',)
+        ordering = ('name',)
 
 # Package type, e.g. TO220 or LQFP144
 class Package(BasicInfo):

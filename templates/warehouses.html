@@ -42,7 +42,7 @@
             <div class="list-group-item">
               <div class="row justify-content-center">
                 <div class="col-sm-4">
-                  <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#editWHModal">Добавить</button>
+                  <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#createWHModal">Добавить</button>
                 </div>
                 {% if current_wh is not None and current_usr in current_wh.managed_by.all %}
                   <div class="col-sm-4">
@@ -202,22 +202,25 @@
     </script>
 
     <div id="editWHModal" class="modal fade" role="dialog">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h4 class="modal-title">Редактировать склад</h4>
-        </div>
-        <div class="modal-body">
-          <form method="post" action="edit"
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-primary" data-dismiss="modal">Сохранить</button>
-          <button type="button" class="btn btn-danger" data-dismiss="modal">Закрыть</button>
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title">Редактировать склад</h4>
+          </div>
+          {% include "warehouse_form.html" with form=wh_form current_object=current_wh wh=current_wh loc=current_loc %}
         </div>
       </div>
-
     </div>
-  </div>
 
+    <div id="createWHModal" class="modal fade" role="dialog">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title">Добавить склад</h4>
+          </div>
+          {% include "warehouse_form.html" with form=wh_form current_object=None wh=current_wh loc=current_loc %}
+        </div>
+      </div>
+    </div>
   </body>
 </html>
