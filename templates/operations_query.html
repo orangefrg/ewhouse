@@ -19,7 +19,35 @@
     <div class="container">    
       {% include "mode_selector.html" with cur_mode="ops" %}
       <div class="row justify-content-center mb-5" id="functions">
-            {% include "ops_mode_selector.html" with mode="main" %}
+            {% include "ops_mode_selector.html" with mode="query" %}
+      </div>
+      {% if variants is not None %}
+      <div class="row mb-5">
+        {% for v in variants %}
+          <div class="col-sm-3">Вариант {{ forloop.counter }}</div>
+          <div class="col-sm-9">
+            <ul class="list-group mb-3">
+              {% for itm in v %}
+              <li class="list-group-item  justify-content-between">
+                {{ itm.location }}
+                <span class="badge badge-success">{{ itm.count }}</span>   
+                <span class="badge {% if itm.will_be_left == 0 %}badge-danger{% else %}badge-info{% endif %}">{{ itm.will_be_left }} останется</span>
+              </li>
+              {% endfor %}
+          </div>
+        {% empty %}
+          <div class="alert alert-danger" role="alert">
+            Не удалось подобрать варианты.
+          </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+      <div class="row mb-5" id="main_form">
+        <div class="col-sm-12">
+          <form method="post">{% csrf_token %}
+            {% include "operations_form.html" with form=form %}
+          </form>
+        </div>
       </div>
     </div>
 

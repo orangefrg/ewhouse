@@ -214,6 +214,9 @@ class Inventory(models.Model):
     def get_name(self):
         return self.unit.name
 
+    def total_price(self):
+        return self.price * self.count
+
     def __str__(self):
         return "{} x{} ({})".format(self.unit.name, self.count, self.location.get_full_name())
 
@@ -223,10 +226,11 @@ class Inventory(models.Model):
 # Transaction
 class Transaction(BasicInfo):
     registered_at = models.DateTimeField(auto_now_add=True, verbose_name="Время регистрации")
-    occured_at = models.DateTimeField(verbose_name="Время исполнения")
+    occured_at = models.DateTimeField(null=True, verbose_name="Время исполнения")
     transaction_type = models.CharField(max_length=10, choices=TRANSACTION_TYPES, verbose_name="Тип транзакции")
     supplier = models.ForeignKey(Supplier, null=True, blank=True, verbose_name="Поставщик", on_delete=models.PROTECT)
-
+    author = models.ManyToManyField(User, verbose_name="Исполнитель")
+    
     def __str__(self):
         return "{:%Y-%m-%d %H:%M} ({})".format(self.occured_at, self.name)
 
@@ -235,11 +239,13 @@ class AtomicTransaction(models.Model):
     component = models.ForeignKey(Component, on_delete=models.PROTECT, verbose_name="Компонент")
     count = models.IntegerField(verbose_name="Количество")
     price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name="Цена одного")
-    from_location = models.ForeignKey(Location, null=True, blank=True,
+    from_location = models.ForeignKey(Inventory, null=True, blank=True,
                                       related_name='outgoing_transactions', verbose_name="Откуда", on_delete=models.SET_NULL)
-    to_location = models.ForeignKey(Location, null=True, blank=True,
+    to_location = models.ForeignKey(Inventory, null=True, blank=True,
                                     related_name='incoming_transactions', verbose_name="Куда", on_delete=models.SET_NULL)
     transaction = models.ForeignKey(Transaction, on_delete=models.PROTECT, verbose_name="Родительская транзакция")
+    is_completed = models.BooleanField(default=False)
+    is_reverted = models.BooleanField(default=False)
 
     def __str__(self):
         ret = ""

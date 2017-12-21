@@ -19,7 +19,14 @@
     <div class="container">    
       {% include "mode_selector.html" with cur_mode="ops" %}
       <div class="row justify-content-center mb-5" id="functions">
-            {% include "ops_mode_selector.html" with mode="main" %}
+            {% include "ops_mode_selector.html" with mode="manual" %}
+      </div>
+      <div class="row mb-5">
+          <form method="post">{% csrf_token %}
+             <!-- TODO: Location (from) -->
+             <!-- TODO: Location (to) -->
+             <!-- TODO: Dynamically add tuple of (component, count) -->
+          </form>
       </div>
     </div>
 

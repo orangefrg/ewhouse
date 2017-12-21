@@ -1,6 +1,6 @@
 from django.conf.urls import url, include
 from django.contrib import admin
-from ewhouse.views import loginpage, check_user, log_out, inventory, operations, library, warehouses
+from ewhouse.views import loginpage, check_user, log_out, inventory, operations, operations_manual, operations_query, operations_file, library, warehouses
 
 admin.autodiscover()
 
@@ -12,6 +12,9 @@ urlpatterns = [url(r'^name_yourself/$', loginpage, name='login'),
                url(r'^inventory/(?P<warehouse_id>[0-9]+)/$', inventory, name='inventory'),
                url(r'^logout/$', log_out, name='log_out'),
                url(r'^ops/$', operations, name='operations'),
+               url(r'^ops/manual$', operations_manual, name='operations_manual'),
+               url(r'^ops/query$', operations_query, name='operations_query'),
+               url(r'^ops/file$', operations_file, name='operations_file'),
                url(r'^warehouses/$', warehouses, name='warehouses-all'),
                url(r'^warehouses/(?P<wh_id>[0-9]+)/$', warehouses, name='warehouses-one'),
                url(r'^warehouses/edit/$', warehouses, {'edit_wh': True}, name='warehouses-all-edit'),

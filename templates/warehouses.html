@@ -181,6 +181,7 @@
         var loc;
         var map;
         var bounds = new google.maps.LatLngBounds();
+        var anim = google.maps.Animation.BOUNCE
         function addMarker(location, name, active) {          
           var marker = new google.maps.Marker({
           position: location,
@@ -188,12 +189,18 @@
           title: name,
           status: active
           });
+          return marker;
         }
         map = new google.maps.Map(document.getElementById('map'), {mapTypeId: google.maps.MapTypeId.ROADMAP});
         {% for w in all_wh %}
           loc = new google.maps.LatLng("{{w.latitude}}","{{w.longitude}}");
           bounds.extend(loc);
-          addMarker(loc, '{{w.name}}', "active");
+          {% if current_wh == w %}
+            var mrk = addMarker(loc, '{{w.name}}', "active");
+            mrk.setAnimation(anim);
+          {% else %}
+            addMarker(loc, '{{w.name}}', "active");
+          {% endif %}
         {% endfor %}
         map.fitBounds(bounds);
         map.panToBounds(bounds);

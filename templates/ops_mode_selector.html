@@ -1,0 +1,17 @@
+<div class="btn-group" role="group" aria-label="Ops modes">
+    {% if mode == "manual" %}
+        <a role="button" class="btn btn-light active" href="manual">Ручной запрос</a>
+    {% else %}      
+        <a role="button" class="btn btn-light" href="manual">Ручной запрос</a>
+    {% endif %}
+    {% if mode == "query" %}
+        <a role="button" class="btn btn-light active" href="query">Подбор вариантов</a>
+    {% else %}      
+        <a role="button" class="btn btn-light" href="query">Подбор вариантов</a>
+    {% endif %}
+    {% if mode == "file" %}
+        <a role="button" class="btn btn-light active" href="file">Из файла</a>
+    {% else %}      
+        <a role="button" class="btn btn-light" href="file">Из файла</a>
+    {% endif %}
+</div>

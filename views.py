@@ -10,6 +10,8 @@ from .presenters import show_inventory, get_available_libraries, WarehouseForm, 
 from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
 from django import forms
+from .forms import OperationForm
+from .workers import find_items
 import simplejson, sys
 
 LOGIN_PAGE = '/ewhouse/name_yourself/'
@@ -71,6 +73,40 @@ def inventory(request, warehouse_id=None):
     context = {'name': request.user.first_name, 'lastname': request.user.last_name,
                'email': request.user.email, 'items': units, 'warehouse': wh, 'warehouses': Warehouse.objects.all()}
     return HttpResponse(template.render(context, request))
+
+@login_required(login_url=LOGIN_PAGE)
+def operations_query(request):
+    if request.method == "POST":
+        form = OperationForm(request.POST)
+        if form.is_valid():
+            cdata = form.cleaned_data
+            excl_location = cdata["to_location"]
+            component = cdata["component"]
+            count = cdata["count"]
+            variants = find_items(component, count, excl_location)
+    else:
+        form = OperationForm()
+        variants = None
+    template = loader.get_template('operations_query.html')
+    context = {'name': request.user.first_name, 'lastname': request.user.last_name,
+               'email': request.user.email, 'form': form, 'variants': variants}
+    return HttpResponse(template.render(context, request))
+
+@login_required(login_url=LOGIN_PAGE)
+def operations_manual(request):
+    template = loader.get_template('operations_manual.html')
+    context = {'name': request.user.first_name, 'lastname': request.user.last_name,
+               'email': request.user.email}
+    return HttpResponse(template.render(context, request))
+
+
+@login_required(login_url=LOGIN_PAGE)
+def operations_file(request):
+    template = loader.get_template('operations_file.html')
+    context = {'name': request.user.first_name, 'lastname': request.user.last_name,
+               'email': request.user.email}
+    return HttpResponse(template.render(context, request))
+
 
 @login_required(login_url=LOGIN_PAGE)
 def operations(request):

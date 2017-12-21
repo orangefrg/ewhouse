@@ -77,6 +77,8 @@
                 <th scope="col">Номинал</th>
                 <th scope="col">Корпус</th>
                 <th scope="col">Количество</th>
+                <th scope="col">Цена за один</th>
+                <th scope="col">Стоимость</th>
                 <th scope="col">Расположение</th>
                 <th scope="col">Склад</th>
               </tr>
@@ -89,6 +91,8 @@
                 <td>{{i.unit.get_string_value}}</td>
                 <td>{{i.unit.package.name}}</td>
                 <td>{{i.count}}</td>
+                <td>{{i.price}} руб.</td>
+                <td>{{i.total_price}} руб.</td>
                 <td>{{i.location.name}}</td>
                 <td>{{i.location.warehouse.name}}</td>
               </tr>
