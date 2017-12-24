@@ -21,14 +21,45 @@
       <div class="row justify-content-center mb-5" id="functions">
             {% include "ops_mode_selector.html" with mode="manual" %}
       </div>
+      {% if availability|length > 0 %}
+      <div class="row-mb-5">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Доступность</th>
+              <th>Компонент</th>
+              <th>Расположение</th>
+            </tr>
+          </thead>
+          {% for av in availability %}
+          <tr class="table-{% if av.0 %}success{% else %}danger{% endif %}">
+            <th scope="row">{{ forloop.counter }}</th>
+            <td>
+              {% if av.0 %}
+              Да
+              {% else %}
+              Нет
+              {% endif %}
+            </td>
+            <td>
+              {{ av.1.name }} x {{ av.2 }}
+            </td>
+            <td>
+              {{ av.3 }}
+            </td>
+          </tr>
+          {% endfor %}
+        </table>
+      </div>
+      {% endif %}
       <div class="row mb-5">
-          <form method="post">{% csrf_token %}
-             <!-- TODO: Location (from) -->
-             <!-- TODO: Location (to) -->
-             <!-- TODO: Dynamically add tuple of (component, count) -->
+        <div class="col-sm-12">
+          <form method="post" id="ops_form">{% csrf_token %}
+            {% include "operations_form_manual.html" with form=form additional=True %}
           </form>
+        </div>
       </div>
     </div>
-
   </body>
 </html>

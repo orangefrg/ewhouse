@@ -10,8 +10,8 @@ from .presenters import show_inventory, get_available_libraries, WarehouseForm, 
 from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
 from django import forms
-from .forms import OperationForm
-from .workers import find_items
+from .forms import OperationForm, ManualOperationForm
+from .workers import find_items, check_availability
 import simplejson, sys
 
 LOGIN_PAGE = '/ewhouse/name_yourself/'
@@ -95,8 +95,20 @@ def operations_query(request):
 @login_required(login_url=LOGIN_PAGE)
 def operations_manual(request):
     template = loader.get_template('operations_manual.html')
+    availability = []
+    if request.method == "POST":
+        form = ManualOperationForm(request.POST)
+        if form.is_valid():
+            cdata = form.cleaned_data
+            comp = cdata["component"]
+            locs = form.get_location_tuples()
+            for l in locs:
+                av = check_availability(comp, l[1], l[0])
+                availability.append((av, comp, l[1], l[0]))
+    else:
+        form = ManualOperationForm()
     context = {'name': request.user.first_name, 'lastname': request.user.last_name,
-               'email': request.user.email}
+               'email': request.user.email, 'form': form, 'availability': availability}
     return HttpResponse(template.render(context, request))
 
 

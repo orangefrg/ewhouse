@@ -1,0 +1,67 @@
+{% load basic_filters %}
+<div class="form-group row" id="{{ field.name }}">
+    <label for="example-search-input" class="col-2 col-form-label">{{ form.component.label }}</label>
+    <div class="col-10">
+        {{ form.component|addclass:'form-control' }}
+        {{ form.location_count|addclass:'form-control' }}
+    </div>
+    <ul class="list-group">
+        {% for err in form.component.errors %}
+        <li class="list-group-item">{{ err }}</li>
+        {% endfor %}
+    </ul>
+</div>
+{% for i in form.location_count.value|getrange %}
+    {% with atl=i|addtoend:"location_" atc=i|addtoend:"count_" %}
+        {% with field_loc=form|getdictvalue:atl field_count=form|getdictvalue:atc %}
+            <div class="form-group row" id="{{ field_loc.name }}">
+                <label for="example-search-input" class="col-2 col-form-label" id={{ field_loc.name|add:"_label" }}>{{ field_loc.label }}</label>
+                <div class="col-8">
+                    {{ field_loc|addclass:'form-control' }}
+                    <ul class="list-group">
+                        {% for err in field_loc.errors %}
+                        <li class="list-group-item">{{ err }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="col-2">
+                    {{ field_count|addclass:'form-control' }}
+                    <ul class="list-group">
+                        {% for err in field_count.errors %}
+                        <li class="list-group-item">{{ err }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        {% endwith %}
+    {% endwith %}
+{% endfor %}
+{% if additional %}<button type="button" id="add-another" class="btn btn-success">Добавить расположение</button>
+<script>
+    var count_field = $("[name=location_count]")
+	var form_count = Number(count_field.val());
+	
+	$("#add-another").click(function() {
+        var last_div = "#location_" + String(form_count - 1);
+        var last_loc = "#id_location_" + String(form_count - 1);
+        var last_cnt = "#id_count_" + String(form_count - 1);
+        var last_lbl = "#location_" + String(form_count - 1) + "_label";
+		form_count ++;
+		var new_el = $(last_div).clone();
+        new_el.attr("id", "location_" + String(form_count - 1));
+        var new_loc = new_el.find(last_loc);
+        new_loc.attr("id", "id_location_" + String(form_count - 1));
+        new_loc.attr("name", "location_" + String(form_count - 1));
+        var new_loc = new_el.find(last_cnt);
+        new_loc.attr("id", "id_count_" + String(form_count - 1));
+        new_loc.attr("name", "count_" + String(form_count - 1));
+        var new_lbl = new_el.find(last_lbl);
+        new_lbl.attr("id", "location_" + String(form_count - 1) + "_label")
+        var new_lbl_text = new_lbl.text().replace(/.$/,String(form_count))
+        new_lbl.text(new_lbl_text);
+        count_field.val(form_count);
+		$(last_div).after(new_el);
+	})
+</script>
+{% endif %}
+<button type="submit" class="btn btn-primary">Запросить</button>

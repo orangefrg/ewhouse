@@ -1,6 +1,6 @@
 {% load basic_filters %}
 {% for field in form %}
-	<div class="form-group row">
+	<div class="form-group row" id="{{ field.name }}">
 		<label for="example-search-input" class="col-2 col-form-label">{{ field.label }}</label>
 		<div class="col-10">
 			{{ field|addclass:'form-control' }}
@@ -12,4 +12,23 @@
 		</ul>
 	</div>
 {% endfor %}
+{% if additional %}<button id="add-another" class="btn btn-success">Добавить расположение</button>
+<script>
+	var form_count = Number($("[name=id_location_count]").val());
+	// get extra form count so we know what index to use for the next item.
+	
+	$("#add-another").click(function() {
+		form_count ++;
+	
+		var new_el = $("[name=location_0]").clone()
+		new_el.attr('name', 'extra_field_' + form_count);
+		$("#forms").append(element);
+		// build element and append it to our forms container
+	
+		$("[name=extra_field_count]").val(form_count);
+		// increment form count so our view knows to populate 
+		// that many fields for validation
+	})
+	</script>
+{% endif %}
 <button type="submit" class="btn btn-primary">Запросить</button>
