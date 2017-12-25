@@ -22,6 +22,16 @@ def get_items_count(component, location):
 def check_availability(component, count, location):
     return get_items_count(component, location) >= count
 
+def get_availability_full(component, count, location):
+    out = {}
+    cnt = get_items_count(component, location)
+    out["available"] = cnt >= count
+    out["needed"] = count
+    out["exists"] = cnt
+    out["component"] = component
+    out["location"] = location
+    return out
+
 def find_inventory_by_price(location, component, price):
     try:
         return location.inventory_set.filter(unit=component, price=price).get()

@@ -10,7 +10,7 @@ from .presenters import show_inventory, get_available_libraries, WarehouseForm, 
 from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
 from django import forms
-from .forms import OperationForm, ManualOperationForm
+from .forms import OperationForm, ManualOperationForm, MultipleOpsForm
 from .workers import find_items, check_availability
 import simplejson, sys
 
@@ -110,6 +110,39 @@ def operations_manual(request):
     context = {'name': request.user.first_name, 'lastname': request.user.last_name,
                'email': request.user.email, 'form': form, 'availability': availability}
     return HttpResponse(template.render(context, request))
+
+@login_required(login_url=LOGIN_PAGE)
+def operations_multiple(request):
+    template = loader.get_template('operations_multiple.html')
+    availability = None
+    execute = False
+    result = None
+    if request.method == "POST":
+        print(request.POST)
+        form = MultipleOpsForm(request.POST)
+        if form.is_valid():
+            availability = form.get_availability()
+        if request.POST["action"] == 'request':
+            execute = True
+            for f in form:
+                f.field.widget = forms.HiddenInput()
+        elif request.POST["action"] == 'execute':
+            #TODO: Execute operations
+            #
+            #Make big transaction
+            #Make atomic transactions
+            #Report impossible ones
+            result = (0, "Выполнено успешно")
+            form = MultipleOpsForm()
+            availability = None
+    else:
+        form = MultipleOpsForm()
+    context = {'name': request.user.first_name, 'lastname': request.user.last_name,
+               'email': request.user.email, 'form': form, 'availability': availability,
+               'execute': execute, 'result': result}
+    return HttpResponse(template.render(context, request))
+
+
 
 
 @login_required(login_url=LOGIN_PAGE)

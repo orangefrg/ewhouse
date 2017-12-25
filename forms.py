@@ -1,5 +1,6 @@
 from django import forms
-from .models import Component, Location
+from .models import *
+from .workers import get_availability_full
 
 class OperationForm(forms.Form):
     to_location = forms.ModelChoiceField(label="Перенести в",
@@ -43,3 +44,59 @@ class ManualOperationForm(forms.Form):
                     out_data_dict[loc] = cnt
         return out_data_dict.items()
 
+
+class MultipleOpsForm(forms.Form):
+    target_location = forms.ModelChoiceField(label="Куда", queryset=Location.objects.all(), required=False, empty_label="Внешнее расположение")
+    element_count = forms.IntegerField(widget=forms.HiddenInput(), label="Расположения")
+
+    operation_type = forms.ChoiceField(label="Тип операции", choices = TRANSACTION_TYPES)
+
+    def __init__(self, *args, **kwargs):
+        element_count = 1
+        if len(args) > 0 and args[0]["element_count"] is not None and int(args[0]["element_count"]) > 1:
+            element_count = args[0]["element_count"]
+        super(MultipleOpsForm, self).__init__(*args, **kwargs)
+        self.fields['element_count'].initial = element_count
+
+        for i in range(int(element_count)):
+            self.fields['component_{}'.format(i)] = forms.ModelChoiceField(
+                label="Компонент {}".format(i+1),
+                help_text="Компонент, который требуется перенести",
+                queryset=Component.objects.all())
+            self.fields['location_{}'.format(i)] = forms.ModelChoiceField(
+                label="Расположение {}".format(i+1),
+                help_text="Расположение, где нужно найти компоненты",
+                queryset=Location.objects.all())
+            self.fields['count_{}'.format(i)] = forms.IntegerField(label="Количество", min_value=0)
+
+    def get_ops_tuples(self):
+        cdata = self.cleaned_data
+        out_data_dict = {}
+        for i in range(int(cdata["element_count"])):
+            loc = cdata["location_{}".format(i)]
+            cnt = cdata["count_{}".format(i)]
+            comp = cdata["component_{}".format(i)]
+            if loc is not None and comp is not None and cnt > 0:
+                if loc in out_data_dict:
+                    if comp in out_data_dict[loc]:
+                        out_data_dict[loc][comp] += cnt
+                    else:
+                        out_data_dict[loc][comp] = cnt
+                else:
+                    out_data_dict[loc] = {}
+                    out_data_dict[loc][comp] = cnt
+        return out_data_dict
+
+    def get_availability(self):
+        out = {}
+        out["success"] = []
+        out["failure"] = []
+        all_dict = self.get_ops_tuples()
+        for loc, comp_d in all_dict.items():
+            for comp, cnt in comp_d.items():
+                av = get_availability_full(comp, cnt, loc)
+                if av["available"]:
+                    out["success"].append(av)
+                else:
+                    out["failure"].append(av)
+        return out

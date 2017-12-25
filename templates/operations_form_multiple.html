@@ -1,0 +1,95 @@
+{% load basic_filters %}
+{% if not execute %}
+<div class="form-group row" id="{{ field.name }}">  
+    <div class="col-sm-8">
+        <label for="id_target_location">{{ form.target_location.label }}</label>
+        {{ form.target_location|addclass:'form-control' }}
+        {{ form.element_count|addclass:'form-control' }}
+        <ul class="list-group">
+            {% for err in form.target_location.errors %}
+                <li class="list-group-item">{{ err }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    <div class="col-sm-4">
+        <label for="id_operation_type">{{ form.operation_type.label }}</label>
+        {{ form.operation_type|addclass:'form-control' }}
+        <ul class="list-group">
+            {% for err in form.operation_type.errors %}
+                <li class="list-group-item">{{ err }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% for i in form.element_count.value|getrange %}
+    {% with atl=i|addtoend:"location_" atc=i|addtoend:"count_" atu=i|addtoend:"component_" %}
+        {% with field_loc=form|getdictvalue:atl field_count=form|getdictvalue:atc field_comp=form|getdictvalue:atu %}
+            <div class="form-group row" id="{{ field_loc.name }}">
+                <label for="{{ atu|addtoend:"id_" }}" id="{{ field_comp.name|add:"_label" }}" class="col-2 col-form-label">{{ field_comp.label }}</label>
+                <div class="col-3">
+                    {{ field_comp|addclass:'form-control' }}
+                    <ul class="list-group">
+                        {% for err in field_comp.errors %}
+                        <li class="list-group-item">{{ err }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <label for="{{ atc|addtoend:"id_" }}" }}" class="col-1 col-form-label">x</label>
+                <div class="col-1">
+                    {{ field_count|addclass:'form-control' }}
+                    <ul class="list-group">
+                        {% for err in field_count.errors %}
+                        <li class="list-group-item">{{ err }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <label for="{{ atl|addtoend:"id_" }}" }}" class="col-2 col-form-label">из/в</label>
+                <div class="col-3">
+                    {{ field_loc|addclass:'form-control' }}
+                    <ul class="list-group">
+                        {% for err in field_loc.errors %}
+                        <li class="list-group-item">{{ err }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        {% endwith %}
+    {% endwith %}
+{% endfor %}
+<button type="button" id="add-another" class="btn btn-success">Добавить операцию</button>
+<script>
+    var count_field = $("[name=element_count]")
+	var form_count = Number(count_field.val());
+	
+	$("#add-another").click(function() {
+        var last_div = "#location_" + String(form_count - 1);
+        var last_comp = "#id_component_" + String(form_count - 1);
+        var last_loc = "#id_location_" + String(form_count - 1);
+        var last_cnt = "#id_count_" + String(form_count - 1);
+        var last_lbl = "#component_" + String(form_count - 1) + "_label";
+		form_count ++;
+		var new_el = $(last_div).clone();
+        new_el.attr("id", "location_" + String(form_count - 1));
+        var new_loc = new_el.find(last_loc);
+        new_loc.attr("id", "id_location_" + String(form_count - 1));
+        new_loc.attr("name", "location_" + String(form_count - 1));
+        var new_cnt = new_el.find(last_cnt);
+        new_cnt.attr("id", "id_count_" + String(form_count - 1));
+        new_cnt.attr("name", "count_" + String(form_count - 1));
+        var new_comp = new_el.find(last_comp);
+        new_comp.attr("id", "id_component_" + String(form_count - 1));
+        new_comp.attr("name", "component_" + String(form_count - 1));
+        var new_lbl = new_el.find(last_lbl);
+        new_lbl.attr("id", "component_" + String(form_count - 1) + "_label")
+        var new_lbl_text = new_lbl.text().replace(/.$/,String(form_count))
+        new_lbl.text(new_lbl_text);
+        count_field.val(form_count);
+		$(last_div).after(new_el);
+	})
+</script>
+<button type="submit" class="btn btn-primary" name="action" value="request">Запросить</button>
+{% else %}
+{{ form }}
+<button type="submit" class="btn btn-primary" name="action" value="execute">Выполнить</button>
+<button type="submit" class="btn btn-primary" name="action" value="modify">Изменить</button>
+{% endif %}
