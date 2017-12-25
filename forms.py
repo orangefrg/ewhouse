@@ -69,7 +69,7 @@ class MultipleOpsForm(forms.Form):
                 queryset=Location.objects.all())
             self.fields['count_{}'.format(i)] = forms.IntegerField(label="Количество", min_value=0)
 
-    def get_ops_tuples(self):
+    def get_ops_tuples_mult_in_one(self):
         cdata = self.cleaned_data
         out_data_dict = {}
         for i in range(int(cdata["element_count"])):
@@ -87,16 +87,48 @@ class MultipleOpsForm(forms.Form):
                     out_data_dict[loc][comp] = cnt
         return out_data_dict
 
+
     def get_availability(self):
+        cdata = self.cleaned_data
         out = {}
         out["success"] = []
         out["failure"] = []
-        all_dict = self.get_ops_tuples()
-        for loc, comp_d in all_dict.items():
-            for comp, cnt in comp_d.items():
-                av = get_availability_full(comp, cnt, loc)
-                if av["available"]:
-                    out["success"].append(av)
-                else:
-                    out["failure"].append(av)
+        t_loc = cdata["target_location"] 
+        if cdata["operation_type"] in ["BUY", "GET", "MAKE"]:
+            all_dict = self.get_ops_tuples_mult_in_one()
+            comp_dict = {}
+            for loc, comp_d in all_dict.items():
+                for comp, cnt in comp_d.items():
+                    if comp in comp_dict:
+                        comp_dict[comp]["count"] += cnt
+                    else:
+                        comp_dict[comp] = {}
+                        comp_dict[comp]["count"] = cnt
+            for comp, comp_d in comp_dict.items():
+                av = get_availability_full(comp, comp_d["count"], t_loc)
+                comp_dict[comp]["av"] = av
+            for loc, comp_d in all_dict.items():
+                for comp, cnt in comp_d.items():
+                    cav = comp_dict[comp]["av"]
+                    availability = ["available"]
+                    av = {
+                        "available": cav["available"],
+                        "exists": cav["exists"],
+                        "needed": cnt,
+                        "component": comp,
+                        "location": loc
+                    }
+                    if av["available"]:
+                        out["success"].append(av)
+                    else:
+                        out["failure"].append(av)    
+        else:
+            all_dict = self.get_ops_tuples_mult_in_one()
+            for loc, comp_d in all_dict.items():
+                for comp, cnt in comp_d.items():
+                    av = get_availability_full(comp, cnt, loc)
+                    if av["available"]:
+                        out["success"].append(av)
+                    else:
+                        out["failure"].append(av)
         return out

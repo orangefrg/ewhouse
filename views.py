@@ -11,8 +11,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
 from django import forms
 from .forms import OperationForm, ManualOperationForm, MultipleOpsForm
-from .workers import find_items, check_availability
-import simplejson, sys
+from .workers import find_items, check_availability, create_transaction, make_atomic_transaction, execute_atomic_transaction
+import simplejson, sys, datetime
 
 LOGIN_PAGE = '/ewhouse/name_yourself/'
 MAIN_PAGE = '/ewhouse/inventory/'
@@ -132,7 +132,24 @@ def operations_multiple(request):
             #Make big transaction
             #Make atomic transactions
             #Report impossible ones
-            result = (0, "Выполнено успешно")
+            cdata = form.cleaned_data
+            trans = create_transaction(request.user, datetime.datetime.utcnow().isoformat(), "No descrtiption yet",
+                                        cdata["operation_type"])
+            ats = []
+            for a in availability["success"]:
+                if cdata["operation_type"] in ["BUY", "GET", "MAKE"]:
+                    at = make_atomic_transaction(trans, a["needed"], a["component"], cdata["target_location"],
+                                                a["location"], None)
+                else:   
+                    at = make_atomic_transaction(trans, a["needed"], a["component"], a["location"],
+                                                cdata["target_location"], None)
+                ats.append(at)
+            fail_count = 0
+            for a in ats:
+                if not execute_atomic_transaction(a):
+                    fail_count += 1
+            trans.save()
+            result = (0, "Выполнено успешно") if  fail_count==0 else (1, "Частично выполнено ({}) транзакций отклонены".format(fail_count))
             form = MultipleOpsForm()
             availability = None
     else:

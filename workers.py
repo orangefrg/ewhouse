@@ -24,10 +24,14 @@ def check_availability(component, count, location):
 
 def get_availability_full(component, count, location):
     out = {}
-    cnt = get_items_count(component, location)
-    out["available"] = cnt >= count
+    if location is not None:
+        cnt = get_items_count(component, location)
+        out["available"] = cnt >= count
+        out["exists"] = cnt
+    else:
+        out["exists"] = "∞"
+        out["available"] = True
     out["needed"] = count
-    out["exists"] = cnt
     out["component"] = component
     out["location"] = location
     return out
@@ -44,7 +48,7 @@ def find_non_empty_inventories(location, component):
         return None
     return invs
 
-def execute_atomic_transaction(at):
+def execute_atomic_transaction_old(at):
     remaining_count = at.count
     for inv in find_non_empty_inventories(at.from_location, at.component):
         if inv.count < remaining_count:
@@ -96,6 +100,44 @@ def execute_atomic_transaction(at):
     at.is_completed = True
     at.save()
 
+def execute_atomic_transaction(at):
+    remaining_count = at.count
+    ops = []
+    if at.from_location is not None:
+        from_invs = find_non_empty_inventories(at.from_location, at.component)
+        for i in from_invs:
+            if i.count >= remaining_count:
+                ops.append(i, remaining_count, i.price)
+                remaining_count = 0
+                break
+            else:
+                ops.append(i, i.count, i.price)
+                remaining_count -= i.count
+        if remaining_count > 0:
+            return False
+    else:
+        ops.append(None, remaining_count, at.price)
+    if at.to_location is not None:
+        for o in ops:
+            if at.to_location is not None:
+                inv = find_inventory_by_price(at.to_location, at.component, o[2])
+                if inv is None:
+                    inv = Inventory(
+                        unit = at.component,
+                        location = at.to_location,
+                        count = o[1],
+                        price = o[2] or 0
+                    )
+                else:
+                    inv.count += o[1]
+                inv.save()
+            if o[0] is not None:
+                o[0].count -= o[1]
+                o[0].save()
+    at.is_completed = True
+    at.save()
+    return True
+            
 def create_transaction(user, name, description, transaction_type, supplier=None):
     transaction = Transaction(
         author = user,

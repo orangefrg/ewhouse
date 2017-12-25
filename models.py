@@ -17,11 +17,11 @@ SUPPLIER_TYPES = (
 
 TRANSACTION_TYPES = (
     ("BUY", "Покупка"),
-    ("SELL", "Продажа"),
-    ("MOVE", "Перемещение"),
+    ("GET", "Получение (кроме покупки)"),
+    ("MAKE", "Изготовление"),
     ("USE", "Использование"),
+    ("SELL", "Продажа"),
     ("LOSE", "Утрата"),
-    ("GET", "Приобретение (кроме покупки)"),
     ("OTHER", "Прочее")
 )
 
@@ -229,7 +229,7 @@ class Transaction(BasicInfo):
     occured_at = models.DateTimeField(null=True, verbose_name="Время исполнения")
     transaction_type = models.CharField(max_length=10, choices=TRANSACTION_TYPES, verbose_name="Тип транзакции")
     supplier = models.ForeignKey(Supplier, null=True, blank=True, verbose_name="Поставщик", on_delete=models.PROTECT)
-    author = models.ManyToManyField(User, verbose_name="Исполнитель")
+    author = models.ForeignKey(User, verbose_name="Исполнитель", on_delete=models.SET_NULL, null=True)
     
     def __str__(self):
         return "{:%Y-%m-%d %H:%M} ({})".format(self.occured_at, self.name)
